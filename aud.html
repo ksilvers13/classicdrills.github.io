@@ -1,0 +1,489 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AUD Drill</title>
+<style>
+[hidden]{display:none!important}
+body{margin:0}
+/* Layout: sixth pad in the series. Same ruled card and red margin line; deep ochre accent, like an auditor's tick-mark pencil, marks this as the AUD pad */
+:root{
+  --paper:#f3f2ec; --card:#fcfbf7; --rule:#e2dfd3; --ink:#24221b; --muted:#66624f;
+  --margin:#c4473a; --accent:#8a6100; --accent-soft:#f4ead2;
+  --good:#2c7a4c; --good-soft:#e2f2e8; --bad:#b3382c; --bad-soft:#f8e4e1;
+  --line:#d3cfbf;
+  --display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --body:"Public Sans",ui-sans-serif,system-ui,-apple-system,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#151410; --card:#1e1c17; --rule:#2c2a22; --ink:#ebe8dd; --muted:#a5a08c;
+  --margin:#d46a5d; --accent:#e8c063; --accent-soft:#3a3018;
+  --good:#6cc894; --good-soft:#1c3327; --bad:#ec8276; --bad-soft:#3a201d; --line:#38352b; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#151410; --card:#1e1c17; --rule:#2c2a22; --ink:#ebe8dd; --muted:#a5a08c;
+  --margin:#d46a5d; --accent:#e8c063; --accent-soft:#3a3018;
+  --good:#6cc894; --good-soft:#1c3327; --bad:#ec8276; --bad-soft:#3a201d; --line:#38352b; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+.wrap{max-width:740px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.back{align-self:flex-start;font:600 .78rem var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-decoration:none;border:1px dashed var(--line);border-radius:6px;padding:4px 9px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
+h1{font-family:var(--display);font-weight:800;font-size:2rem;line-height:1;margin:0;letter-spacing:-.02em}
+h1 span{color:var(--accent)}
+.sub{margin:4px 0 0;color:var(--muted);font-size:.9rem;max-width:46ch}
+.stats{display:flex;gap:14px;font-family:var(--mono);font-size:.82rem;color:var(--muted)}
+.stats b{display:block;font-size:1.15rem;color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+.stats .reset{align-self:flex-end;font:600 .72rem var(--mono);color:var(--muted);background:transparent;border:1px dashed var(--line);border-radius:6px;padding:4px 8px;cursor:pointer}
+.stats .reset.armed{color:var(--bad);border-color:var(--bad)}
+
+.modes{display:flex;gap:4px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:4px;width:fit-content;max-width:100%;flex-wrap:wrap}
+.modes button{font:600 .85rem var(--body);border:0;background:transparent;color:var(--muted);padding:7px 12px;border-radius:7px;cursor:pointer}
+.modes button[aria-pressed="true"]{background:var(--accent);color:var(--card)}
+button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.card{position:relative;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px 20px 20px 34px;
+  background-image:repeating-linear-gradient(to bottom,transparent 0,transparent 31px,var(--rule) 31px,var(--rule) 32px);background-position:0 14px}
+.card::before{content:"";position:absolute;left:18px;top:0;bottom:0;width:2px;background:var(--margin);opacity:.55}
+.eyebrow{font:600 .72rem var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--margin);display:flex;gap:10px;flex-wrap:wrap}
+.eyebrow .topic{color:var(--accent)}
+.redo{color:var(--accent)!important}
+.prompt{font-size:1.06rem;font-weight:500;margin:8px 0 16px;max-width:64ch;text-wrap:pretty}
+.prompt strong{font-family:var(--mono);font-weight:600;background:var(--accent-soft);color:var(--accent);padding:0 4px;border-radius:4px;white-space:nowrap}
+.prompt ul{margin:8px 0 0;padding-left:20px}
+.prompt li{margin:2px 0}
+.prompt .proc{display:block;margin-top:8px;padding:8px 12px;border-left:3px solid var(--accent);background:var(--accent-soft);border-radius:0 8px 8px 0;font-weight:500}
+.tw{overflow-x:auto}
+
+.numin{display:flex;align-items:center;gap:8px;max-width:240px}
+.numin span{font:600 1.1rem var(--mono);color:var(--muted)}
+.numin input{width:100%;font:500 .95rem var(--mono);text-align:right;font-variant-numeric:tabular-nums;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:9px 10px;min-width:0}
+.numin.ok input{border-color:var(--good);background:var(--good-soft)}
+.numin.no input{border-color:var(--bad);background:var(--bad-soft)}
+
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.btn{font:600 .92rem var(--body);border-radius:9px;padding:10px 16px;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--card)}
+.btn.ghost{border-style:dashed;color:var(--muted)}
+.btn.sm{padding:6px 12px;font-size:.85rem}
+.btn:disabled{opacity:.5;cursor:default}
+.spacer{flex:1}
+
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px}
+.opt{font:600 .95rem var(--body);padding:12px 14px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;text-align:left}
+.opt:hover:not(:disabled){border-color:var(--accent)}
+.opt.ok{background:var(--good-soft);border-color:var(--good);color:var(--good)}
+.opt.no{background:var(--bad-soft);border-color:var(--bad);color:var(--bad)}
+.opt:disabled{cursor:default}
+
+.fb{margin-top:16px;padding:14px 16px;border-radius:10px;border:1px solid var(--line);background:var(--card)}
+.fb.good{border-color:var(--good)}.fb.bad{border-color:var(--bad)}
+.fb h3{margin:0 0 8px;font:800 1.1rem var(--display)}
+.fb.good h3{color:var(--good)}.fb.bad h3{color:var(--bad)}
+.fb p{margin:8px 0 0;max-width:64ch}
+.journal{width:100%;border-collapse:collapse;font-size:.92rem;min-width:300px}
+.journal td{padding:5px 6px;border-bottom:1px solid var(--rule)}
+.journal td.n{font-family:var(--mono);text-align:right;width:130px;font-variant-numeric:tabular-nums}
+.journal tr.tot td{font-weight:700;border-top:2px solid var(--ink)}
+.note{color:var(--muted);font-size:.88rem}
+
+details{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 16px}
+summary{cursor:pointer;font-weight:700}
+details h4{font:800 1rem var(--display);margin:16px 0 4px;color:var(--accent)}
+.refl{margin:4px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:4px;font-size:.92rem}
+.rules{width:100%;border-collapse:collapse;margin-top:8px;font-size:.9rem;min-width:460px}
+.rules th,.rules td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--rule);vertical-align:top}
+.rules th{font:600 .72rem var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.missbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
+.misslist{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+.miss{border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:var(--paper)}
+.miss .when{font:600 .7rem var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.miss .mq{margin:4px 0 8px;font-weight:500}
+.miss .mq strong{font-family:var(--mono)}
+.miss .mq ul{margin:6px 0 0;padding-left:20px}
+.miss p{margin:6px 0 0;font-size:.9rem;color:var(--muted)}
+@media (max-width:540px){.card{padding:16px 14px 16px 28px}.card::before{left:13px}}
+@media (prefers-reduced-motion:no-preference){.fb{animation:in .18s ease-out}@keyframes in{from{opacity:.4;transform:translateY(3px)}}}
+</style>
+<style>
+/* ---- Classic plain-web skin ---- */
+html:root:not(#x){
+  --paper:#ffffff; --card:#ffffff; --rule:#cccccc; --ink:#000000; --muted:#444444;
+  --margin:#000000; --accent:#0000cc; --accent-soft:#eeeeff;
+  --good:#006600; --good-soft:#e8f5e8; --bad:#cc0000; --bad-soft:#fdeaea;
+  --line:#999999; --head:#e4e4e4; --cell:#ffffff;
+  --display:"Times New Roman",Times,serif; --body:"Times New Roman",Times,serif;
+  --mono:"Courier New",Courier,monospace; color-scheme:light}
+*,*::before,*::after{border-radius:0!important;background-image:none!important;box-shadow:none!important;text-shadow:none!important;animation:none!important;transition:none!important}
+body{background:#fff!important;color:#000;font:17px/1.45 "Times New Roman",Times,serif!important;padding:16px 16px 40px!important}
+.wrap{max-width:760px!important;gap:14px!important}
+.card::before,.card *::before{display:none!important}
+.card{padding:14px 16px!important;border:1px solid #999!important}
+h1{font:bold 2rem/1.15 "Times New Roman",Times,serif!important;letter-spacing:0!important}
+h1 span{color:inherit!important}
+h2,h3,summary{letter-spacing:0!important}
+.sub{color:#333!important;font-style:italic}
+.eyebrow{letter-spacing:0!important;text-transform:none!important;color:#555!important;font:italic .9rem "Times New Roman",Times,serif!important}
+.prompt strong{background:none!important;color:#000!important;padding:0!important;text-decoration:underline}
+.stats{font-family:Arial,Helvetica,sans-serif!important}
+.stats b{font-family:"Times New Roman",Times,serif!important}
+/* mode tabs as a plain text menu */
+.modes{background:none!important;border:0!important;padding:0!important;gap:0 6px!important}
+.modes button{background:none!important;color:#0000cc!important;text-decoration:underline;font:16px "Times New Roman",Times,serif!important;padding:2px 4px!important;border:0!important}
+.modes button[aria-pressed="true"]{color:#000!important;text-decoration:none;font-weight:bold!important}
+.modes button+button::before{content:"|";color:#999;margin-right:8px;text-decoration:none;display:inline-block}
+/* default-looking form buttons */
+.btn,.stats .reset{font:14px Arial,Helvetica,sans-serif!important;background:#efefef!important;color:#000!important;border:1px solid #767676!important;padding:5px 12px!important;cursor:pointer}
+.btn:hover:not(:disabled),.stats .reset:hover{background:#e2e2e2!important}
+.btn.primary{font-weight:bold!important}
+.btn.ghost{border-style:solid!important;color:#000!important}
+.stats .reset.armed{color:#c00!important;border-color:#c00!important}
+.opt{font:16px "Times New Roman",Times,serif!important;border:1px solid #999!important;padding:10px 12px!important}
+.opt:hover:not(:disabled){border-color:#0000cc!important;background:#f4f4ff}
+select,input,textarea{font-family:Arial,Helvetica,sans-serif!important;border:1px solid #767676!important}
+details{border:1px solid #999!important;background:#fff!important}
+summary{font-weight:bold}
+.hint{border-left:3px solid #0000cc!important}
+.miss{background:#f7f7f7!important;border:1px solid #bbb!important}
+.redo{color:#0000cc!important;text-decoration:underline}
+th{letter-spacing:0!important}
+a{color:#0000cc}
+a:visited{color:#551a8b}
+.backlink{font:16px "Times New Roman",Times,serif;align-self:flex-start}
+.sitefoot{margin-top:18px;font-size:.95rem;color:#333}
+.sitefoot hr{border:0;border-top:1px solid #999;margin:0 0 8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="backlink" href="./">&larr; Back to all drills</a>
+  <header>
+    <div>
+      <h1>AUD <span>Drill</span></h1>
+      <p class="sub">Audit risk, assertions, controls, sampling and audit reports. Endless CPA-style questions with the reasoning shown.</p>
+    </div>
+    <div class="stats" aria-live="polite">
+      <div>Score<b id="sScore">0/0</b></div>
+      <div>Streak<b id="sStreak">0</b></div>
+      <div>Best<b id="sBest">0</b></div>
+      <button class="reset" id="resetStats" type="button">Reset</button>
+    </div>
+  </header>
+
+  <div class="modes" role="group" aria-label="Topic">
+    <button id="mMix" data-mode="mix" aria-pressed="true">Mixed</button>
+    <button id="mRisk" data-mode="risk" aria-pressed="false">Risk &amp; materiality</button>
+    <button id="mEv" data-mode="ev" aria-pressed="false">Evidence</button>
+    <button id="mCtl" data-mode="ctl" aria-pressed="false">Controls &amp; sampling</button>
+    <button id="mRep" data-mode="rep" aria-pressed="false">Reports &amp; ethics</button>
+  </div>
+
+  <section class="card" id="card" aria-live="polite"></section>
+
+  <details id="missDet">
+    <summary>Missed questions <span id="missN">(0)</span></summary>
+    <p class="note">Every question you miss or reveal is saved here with its answer. Redo them: a question leaves the list once you get it right.</p>
+    <div class="missbar">
+      <button class="btn primary sm" id="redoBtn" type="button">Redo my misses</button>
+      <span class="spacer"></span>
+      <button class="btn ghost sm" id="clearMiss" type="button">Clear list</button>
+    </div>
+    <div class="misslist" id="missList"></div>
+  </details>
+
+  <details>
+    <summary>Audit reference sheet</summary>
+    <h4>Audit risk model</h4>
+    <ul class="refl">
+      <li>Audit risk = Risk of material misstatement × Detection risk. RMM = Inherent risk × Control risk.</li>
+      <li>Acceptable detection risk = Audit risk ÷ (IR × CR). Higher RMM means lower acceptable detection risk, so more substantive work: more effective procedures, done closer to year-end, with larger samples.</li>
+      <li>The auditor assesses IR and CR but controls only detection risk.</li>
+    </ul>
+    <h4>Vouching vs. tracing</h4>
+    <ul class="refl">
+      <li><b>Vouch</b>: start from the recorded entry, go back to the source document. Tests existence or occurrence (overstatement).</li>
+      <li><b>Trace</b>: start from the source document, go forward to the records. Tests completeness (understatement).</li>
+    </ul>
+    <h4>Which report?</h4>
+    <div class="tw"><table class="rules">
+      <thead><tr><th>Problem</th><th>Material, not pervasive</th><th>Material and pervasive</th></tr></thead>
+      <tbody>
+        <tr><td>Financial statements are misstated</td><td>Qualified</td><td>Adverse</td></tr>
+        <tr><td>Can't get enough evidence (scope limitation)</td><td>Qualified</td><td>Disclaimer</td></tr>
+      </tbody>
+    </table></div>
+    <ul class="refl">
+      <li>Substantial doubt about going concern, adequately disclosed: unmodified opinion with a going concern section.</li>
+      <li>Justified change in accounting principle, properly applied: unmodified opinion with an emphasis-of-matter paragraph.</li>
+    </ul>
+    <h4>COSO internal control components</h4>
+    <ul class="refl">
+      <li>Control environment · Risk assessment · Control activities · Information and communication · Monitoring activities.</li>
+    </ul>
+    <p class="note">Questions follow AICPA standards for nonissuers unless they say otherwise. Firm policies on materiality percentages vary; the question gives the ones to use.</p>
+  </details>
+
+  <div class="sitefoot"><hr>Accounting Drill Pads &middot; Built by Keith Silverstein &middot; UConn School of Business</div>
+</div>
+
+<script>
+// ---------- Helpers ----------
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const r=(min,max,step)=>Math.round((min+Math.random()*(max-min))/step)*step||step;
+const f=n=>Math.abs(n).toLocaleString("en-US",{maximumFractionDigits:2});
+const $=n=>`<strong>$${f(n)}</strong>`;
+const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const COS=["Harbor Lane Bikes","Northgate Tutoring","Pine Hollow Landscaping","Bluebird Print Shop","Summit Tech Repair","Atlas Moving Co.","Maple Street Dental Lab","Ridgeview Photo Studio","Riverbend Pool Service","Cobalt Coworking","Granite Peak Outfitters","Lumen Software"];
+// fixed-option MC from a scenario bank: each item [scenario, answer, why]
+const bankMC=(label,ask,opts,bank)=>()=>{const c=pick(bank);return{kind:"mc",label,q:`${ask(c[0])}`,ans:c[1],opts:shuffle(opts),w:c[2]}};
+const optsFrom=(pool,ans,n=4)=>shuffle([ans,...shuffle(pool.filter(x=>x!==ans)).slice(0,n-1)]);
+const bankPick=(label,ask,pool,bank,n=4)=>()=>{const c=pick(bank);return{kind:"mc",label,q:ask(c[0]),ans:c[1],opts:optsFrom(pool,c[1],n),w:c[2]}};
+const PEOPLE=["Jordan","Priya","Marcus","Elena","Tyler","Aisha","Ben","Sofia","Noah","Grace"];
+const mc=list=>()=>{const c=pick(list);return{kind:"mc",q:c[0],ans:c[1][0],opts:shuffle(c[1]),w:c[2]}};
+
+// ================= CONTENT =================
+const TOPICS={risk:"Risk & materiality",ev:"Evidence",ctl:"Controls & sampling",rep:"Reports & ethics"};
+// ================= RISK & MATERIALITY =================
+const RISK=[
+ co=>{const AR=pick([2,4,5,6,10]),IR=pick([40,50,60,80,100]),CR=pick([25,40,50,60,80,100]);
+   const dr=Math.round(AR/(IR*CR/10000)*100)/100;
+   if(dr>=100)return RISK[0](co);
+   return{kind:"num",unit:"%",tol:.06,t:`For ${co}'s accounts receivable, the auditor sets acceptable audit risk at <strong>${AR}%</strong>, assesses inherent risk at <strong>${IR}%</strong> and control risk at <strong>${CR}%</strong>. What is the acceptable level of detection risk?`,ans:dr,
+   rows:[["Risk of material misstatement (IR × CR)",`${IR}% × ${CR}% = ${f(IR*CR/100)}%`],["Detection risk = AR ÷ RMM",`${AR}% ÷ ${f(IR*CR/100)}% = ${f(dr)}%`,"tot"]],
+   w:`Rearrange AR = IR × CR × DR to DR = AR ÷ (IR × CR). ${dr<20?"That's a low detection risk, so the auditor needs a lot of persuasive substantive evidence.":"That's a fairly high detection risk, so substantive testing can be lighter."}`}},
+ co=>{const bm=pick([["pretax income",r(400000,6000000,10000),pick([5,10])],["total revenue",r(2000000,40000000,100000),pick([.5,1])],["total assets",r(2000000,30000000,100000),pick([1,2])]]),pm=pick([50,60,65,75]);
+   const M=Math.round(bm[1]*bm[2]/100),P=Math.round(M*pm/100),ask=pick(["M","P"]);
+   return{kind:"num",unit:"$",tol:1,t:`${co}'s ${bm[0]} is ${$(bm[1])}. The firm sets overall materiality at <strong>${bm[2]}%</strong> of ${bm[0]} and performance materiality at <strong>${pm}%</strong> of overall materiality. What is <em>${ask==="M"?"overall materiality":"performance materiality"}</em>?`,ans:ask==="M"?M:P,
+   rows:[[`Overall materiality: $${f(bm[1])} × ${bm[2]}%`,`$${f(M)}`,ask==="M"?"tot":""],[`Performance materiality: $${f(M)} × ${pm}%`,`$${f(P)}`,ask==="P"?"tot":""]],
+   w:"Performance materiality is set below overall materiality so that the total of small, undetected misstatements is unlikely to add up to a material amount. The riskier the engagement, the lower the percentage."}},
+ co=>{const s=pick([
+   ["inherent risk is assessed higher","Decrease","Higher risk of misstatement means the auditor can accept less risk of missing it, so detection risk goes down and substantive testing goes up."],
+   ["control risk is assessed lower after testing controls","Increase","Effective controls lower the risk of material misstatement, so the auditor can accept more detection risk and do less substantive work."],
+   ["acceptable audit risk is lowered (for example, many outside users rely on the statements)","Decrease","With less overall risk allowed and RMM unchanged, detection risk must fall."],
+   ["the client has a history of material adjustments in this account","Decrease","Past misstatements raise inherent risk, which lowers acceptable detection risk."],
+   ["control risk is assessed at the maximum because controls weren't tested","Decrease","Without relying on controls, RMM is as high as it gets for this inherent risk, so detection risk must be low."]]);
+   return{kind:"mc",label:"Risk direction",q:`For ${co}, ${s[0]}. Holding everything else constant, what happens to acceptable detection risk?`,ans:s[1],opts:["Increase","Decrease","No change"],w:s[2]}},
+ mc([
+  ["When acceptable detection risk is lowered, the auditor would most likely…",["Increase sample sizes for substantive tests","Reduce substantive testing","Rely more on interim procedures","Assess control risk higher"],"Lower detection risk calls for more effective substantive procedures, timed closer to year-end, with larger samples."],
+  ["Which component of audit risk does the auditor directly control?",["Detection risk","Inherent risk","Control risk","Risk of material misstatement"],"Inherent and control risk exist independently of the audit. The auditor assesses them but only sets detection risk through the nature, timing and extent of procedures."],
+  ["Inherent risk is the susceptibility of an assertion to material misstatement…",["Before considering any related controls","After considering the client's controls","That the auditor's procedures won't detect","Caused only by fraud"],"Control risk is whether controls fail to catch it; detection risk is whether the auditor fails to catch it."],
+  ["A misstatement below materiality could still be material if it…",["Turns a reported loss into income","Is in a large account","Was found late in the audit","Is in the cash account"],"Qualitative factors matter: misstatements that flip a trend, hide a covenant breach or turn a loss into income can be material even when small."],
+  ["Which is generally a fraud risk factor related to incentives or pressures?",["Management bonuses tied to aggressive earnings targets","A strong, independent audit committee","Rotation of duties among staff","Low turnover in the accounting department"],"The fraud triangle is incentive or pressure, opportunity, and rationalization. Bonus targets create pressure."],
+  ["Analytical procedures are required during…",["Planning and the overall review near the end","Planning only","Substantive testing only","Every phase, including tests of controls"],"They're required in risk assessment and in the final overall review. Substantive analytics are optional."],
+ ]),
+];
+
+// ================= EVIDENCE & ASSERTIONS =================
+const ASSERT_OPTS=["Existence or occurrence","Completeness","Rights and obligations","Valuation and accuracy","Cutoff"];
+const PROCS=[
+ ["Send confirmation requests to a sample of customers with receivable balances.","Existence or occurrence","A customer confirming the balance is third-party evidence that the receivable is real."],
+ ["Observe the client's year-end physical inventory count and make test counts.","Existence or occurrence","Seeing the goods confirms that recorded inventory actually exists."],
+ ["Select recorded sales from the sales journal and vouch them to shipping documents.","Existence or occurrence","Vouching runs from the records back to the source, which catches recorded sales that never happened."],
+ ["Select shipping documents and trace them forward into the sales journal.","Completeness","Tracing runs from source documents to the records, which catches shipments that were never recorded."],
+ ["Review cash disbursements made in the weeks after year-end for liabilities that should have been recorded.","Completeness","This is the search for unrecorded liabilities. Payments after year-end often reveal expenses incurred before it."],
+ ["Examine sales invoices and shipping documents for the last few days before and first few days after year-end.","Cutoff","This tests whether transactions near year-end were recorded in the right period."],
+ ["Review the aging of accounts receivable and evaluate the allowance for doubtful accounts.","Valuation and accuracy","The aging shows how collectible receivables are, which supports their net realizable value."],
+ ["Recompute depreciation expense for a sample of fixed assets.","Valuation and accuracy","Recalculating checks that the asset is carried at the right amount."],
+ ["Compare the cost of inventory items to recent selling prices to test lower of cost and net realizable value.","Valuation and accuracy","This tests whether inventory needs to be written down."],
+ ["Inspect deeds, titles and loan agreements for the client's property.","Rights and obligations","Title documents show the client owns the asset, and loan agreements reveal liens."],
+ ["Ask whether inventory held at the client's warehouse includes goods held on consignment for others.","Rights and obligations","Consigned goods sit on the client's floor but belong to someone else."],
+ ["Count the number of inventory tags and account for all tag numbers used in the count.","Completeness","Accounting for every tag number makes sure no counted items were left out of the totals."],
+];
+const EV=[
+ ()=>{const p=pick(PROCS);return{kind:"mc",label:"Match the assertion",q:`Which assertion does this procedure primarily test?<span class="proc">${p[0]}</span>`,ans:p[1],opts:shuffle(ASSERT_OPTS),w:p[2]}},
+ ()=>{const p=pick(PROCS);return{kind:"mc",label:"Match the assertion",q:`Which assertion does this procedure primarily test?<span class="proc">${p[0]}</span>`,ans:p[1],opts:shuffle(ASSERT_OPTS),w:p[2]}},
+ ()=>{const s=pick([
+   ["recorded sales that never happened","Vouch from the sales journal back to shipping documents","Overstatement is a problem with what's already recorded, so start from the records and look for support."],
+   ["sales that were shipped but never recorded","Trace from shipping documents forward to the sales journal","Understatement means something is missing from the records, so start outside them, from the source documents."],
+   ["fictitious purchases recorded as expenses","Vouch from the purchases journal back to receiving reports and vendor invoices","Starting from recorded purchases and looking for support catches entries with nothing behind them."],
+   ["receiving reports for goods that never made it into accounts payable","Trace from receiving reports forward to the purchases journal","Starting from the source document catches liabilities that were never recorded."]]);
+   return{kind:"mc",label:"Direction of testing",q:`The auditor is concerned about <b>${s[0]}</b>. Which approach best addresses it?`,ans:s[1],
+   opts:shuffle(s[1].startsWith("Vouch")?[s[1],s[1].replace("Vouch from","Trace from").replace(" back to "," forward to "),"Recalculate totals in the journal","Inquire of the sales manager"]:[s[1],s[1].replace("Trace from","Vouch from").replace(" forward to "," back to "),"Recalculate totals in the journal","Inquire of the accounting manager"]),w:s[2]}},
+ mc([
+  ["Which evidence is generally the most reliable?",["A bank confirmation sent and received directly by the auditor","A copy of the bank statement provided by the client","The client's bank reconciliation","Oral representations from the controller"],"Evidence from an independent outside source, obtained directly by the auditor, is the most reliable."],
+  ["Which evidence is generally the least reliable?",["Oral responses to inquiries of management","A vendor statement mailed to the auditor","The auditor's own recalculation","An original signed contract"],"Inquiry alone is never sufficient. It needs to be corroborated with other evidence."],
+  ["A negative confirmation asks the customer to respond…",["Only if they disagree with the balance","Whether or not they agree","With the balance they show, without one being given","Only if the balance is over materiality"],"Negative confirmations are appropriate only when risk is low, there are many small balances, and few exceptions are expected."],
+  ["A receivable confirmation is NOT returned. The auditor should most likely…",["Perform alternative procedures, such as examining subsequent cash receipts","Treat the balance as confirmed","Write off the receivable","Issue a qualified opinion"],"Subsequent cash receipts and shipping documents provide alternative evidence that the receivable existed."],
+  ["Management's written representation letter is…",["Required, dated as of the audit report date","Optional when evidence is strong","A substitute for other audit procedures","Signed by the auditor"],"It complements other evidence but never replaces it. Refusing to provide it is a scope limitation."],
+  ["The audit report should be dated…",["No earlier than when sufficient appropriate evidence has been obtained","On the balance sheet date","When the report is delivered to the client","When fieldwork starts"],"That includes having the representation letter and evidence that the statements were prepared and approved."],
+ ]),
+];
+
+// ================= CONTROLS & SAMPLING =================
+const COSO=["Control environment","Risk assessment","Control activities","Information and communication","Monitoring activities"];
+const CTL=[
+ bankMC("COSO component",s=>`Which COSO internal control component does this describe?<span class="proc">${s}</span>`,COSO,[
+  ["The board adopts a code of conduct and management consistently models it.","Control environment","Tone at the top, integrity and ethical values, and board oversight make up the control environment."],
+  ["An audit committee of independent directors oversees financial reporting.","Control environment","Board independence and oversight are part of the control environment."],
+  ["Management analyzes how a new overseas product line could lead to misstated revenue.","Risk assessment","Identifying and analyzing risks to reliable financial reporting is risk assessment."],
+  ["The employee who opens the mail and lists checks received does not record cash receipts.","Control activities","Segregation of duties is a control activity."],
+  ["Purchases over $10,000 require a second approval before payment.","Control activities","Authorization requirements are control activities."],
+  ["The accounting system captures transactions and routes exception reports to the responsible managers.","Information and communication","Capturing, processing and communicating relevant information is this component."],
+  ["Internal audit periodically tests whether key controls are operating and reports deficiencies.","Monitoring activities","Ongoing and separate evaluations of whether controls still work are monitoring."],
+ ]),
+ bankMC("Segregation of duties",s=>`Which duty should be kept separate from <b>${s}</b>?`,["Recording cash receipts in the books","Approving the employee's vacation request","Filing invoices alphabetically","Ordering office supplies"],[
+  ["custody of cash (opening mail and depositing checks)","Recording cash receipts in the books","Custody, authorization and recording should be held by different people, so no one can both take an asset and hide it in the records."],
+ ]),
+ co=>{const n=pick([40,50,60,80,100,120]),d=pick([0,1,2,3]),tdr=pick([4,5,6,7,8,10]),udl=Math.round((d/n*100+pick([2.5,3.5,4.5,5.5,6.5]))*10)/10,ok=udl<=tdr;
+   return{kind:"mc",label:"Attributes sampling",q:`Testing ${co}'s control over purchase approvals, the auditor sets a tolerable deviation rate of <strong>${tdr}%</strong>. A sample of ${n} invoices finds ${d} deviation${d===1?"":"s"}. Using the sampling table, the upper deviation limit is <strong>${udl}%</strong>. What should the auditor conclude?`,
+   ans:ok?"The control can be relied on as planned":"The control can't be relied on as planned; assess control risk higher",
+   opts:shuffle(["The control can be relied on as planned","The control can't be relied on as planned; assess control risk higher","The sample deviation rate is all that matters, so rely on the control","Issue a qualified opinion"]),
+   w:`Compare the upper deviation limit (${udl}%) to the tolerable rate (${tdr}%), not the sample rate (${f(d/n*100)}%). ${ok?"The upper limit is within tolerance, so the planned reliance holds.":"The upper limit exceeds tolerance, so the auditor assesses control risk higher and expands substantive testing."}`}},
+ co=>{const TM=r(20000,150000,5000),RF=pick([[3.0,"5%"],[2.31,"10%"],[4.61,"1%"]]),BV=r(500000,5000000,10000),n=Math.ceil(BV*RF[0]/TM-1e-9),SI=Math.round(TM/RF[0]);
+   return{kind:"num",unit:"",tol:1,t:`The auditor uses monetary unit sampling on ${co}'s receivables, with a recorded balance of ${$(BV)}. Tolerable misstatement is ${$(TM)}, no misstatements are expected, and the risk of incorrect acceptance is ${RF[1]} (reliability factor <strong>${RF[0]}</strong>). What sample size is needed? Round up to a whole number.`,ans:n,
+   rows:[[`Sampling interval = $${f(TM)} ÷ ${RF[0]}`,`$${f(SI)}`],[`Sample size = $${f(BV)} ÷ interval, rounded up`,f(n),"tot"]],
+   w:"With no expected misstatements, the sampling interval is tolerable misstatement ÷ reliability factor, and sample size is the population's book value ÷ interval. Larger items are more likely to be picked, which is why MUS suits testing for overstatement."}},
+ mc([
+  ["The risk of assessing control risk too low affects the audit's…",["Effectiveness","Efficiency","Independence","Timeliness only"],"Relying on controls that don't work means the auditor might miss a misstatement. Effectiveness risks are the dangerous ones."],
+  ["The risk of incorrect rejection in substantive sampling affects the audit's…",["Efficiency","Effectiveness","Independence","Materiality"],"Wrongly concluding a correct balance is misstated leads to extra work, not a wrong opinion."],
+  ["Increasing the tolerable deviation rate, all else equal, makes the required sample size…",["Smaller","Larger","Unchanged","Equal to the population"],"Accepting more deviations means less precision is needed, so fewer items."],
+  ["Increasing the expected deviation rate, all else equal, makes the required sample size…",["Larger","Smaller","Unchanged","Zero"],"The closer the expected rate is to tolerable, the more items are needed to conclude the control works."],
+  ["A significant deficiency in internal control is…",["Less severe than a material weakness but important enough to merit governance's attention","More severe than a material weakness","Any deficiency, regardless of severity","A deficiency the client has already fixed"],"A material weakness is a reasonable possibility of a material misstatement not being prevented or detected on time."],
+  ["Material weaknesses found in a nonissuer audit must be communicated to those charged with governance…",["In writing","Orally only","Only if management agrees","Only in the audit report"],"Significant deficiencies and material weaknesses go to governance in writing, generally no later than 60 days after the report release date."],
+ ]),
+];
+
+// ================= REPORTS & ETHICS =================
+const OPN=["Unmodified opinion","Qualified opinion","Adverse opinion","Disclaimer of opinion"];
+const REPORTS=[
+ [co=>`${co} carries inventory at a value the auditor concludes is materially overstated, but the misstatement is confined to inventory and cost of goods sold. Management refuses to adjust.`,"Qualified opinion","A material misstatement that isn't pervasive leads to a qualified (\"except for\") opinion."],
+ [co=>`${co} doesn't consolidate a major subsidiary that it controls. The effect is material and spreads across most of the financial statements. Management refuses to change it.`,"Adverse opinion","A misstatement that's both material and pervasive means the statements as a whole aren't fairly presented."],
+ [co=>`The auditor was engaged after year-end and couldn't observe ${co}'s physical inventory count or verify inventory any other way. Inventory is material but not pervasive.`,"Qualified opinion","A scope limitation that's material but not pervasive leads to a qualified opinion."],
+ [co=>`${co}'s records were destroyed in a fire and the auditor can't obtain evidence for most account balances.`,"Disclaimer of opinion","A scope limitation that's material and pervasive means the auditor can't form an opinion at all."],
+ [co=>`Management of ${co} refuses to sign the written representation letter.`,"Disclaimer of opinion","Refusing to provide required written representations is a scope limitation serious enough that the auditor generally disclaims."],
+ [co=>`The auditor finds a misstatement in ${co}'s prepaid expenses that is well below materiality. Management doesn't adjust it.`,"Unmodified opinion","Immaterial misstatements don't change the opinion, though the auditor tracks them in the summary of uncorrected misstatements."],
+ [co=>`${co} has recurring losses and a loan due within a year that it may not be able to repay. The auditor concludes there's substantial doubt about its ability to continue as a going concern, and the notes disclose it adequately.`,"Unmodified opinion with a going concern section","With adequate disclosure, the opinion stays unmodified, and the report adds a separate section on substantial doubt about going concern. Inadequate disclosure would be a misstatement instead."],
+ [co=>`${co} changed its inventory method from FIFO to weighted average. The change is justified, properly accounted for and disclosed.`,"Unmodified opinion with an emphasis-of-matter paragraph","A justified, properly applied change in accounting principle doesn't modify the opinion, but the auditor adds an emphasis-of-matter paragraph pointing readers to the disclosure."],
+ [co=>`Partway through the engagement, the auditor learns that a member of the audit team owns stock in ${co}. The firm can't resolve the issue before the report.`,"Disclaimer of opinion","An auditor who isn't independent can't express an opinion on a nonissuer's statements and issues a disclaimer, without explaining the reasons."],
+];
+const REP=[
+ co=>{const c=pick(REPORTS);let opts=[...OPN];if(c[1].startsWith("Unmodified opinion with"))opts[0]=c[1];
+   if(c[1]==="Unmodified opinion"&&Math.random()<.5)opts[1]="Unmodified opinion with an emphasis-of-matter paragraph";
+   return{kind:"mc",label:"Which report?",q:`${c[0](co)}<br><br>What type of report should the auditor issue?`,ans:c[1],opts:shuffle(opts),w:c[2]}},
+ co=>{const c=pick(REPORTS);let opts=[...OPN];if(c[1].startsWith("Unmodified opinion with"))opts[0]=c[1];
+   return{kind:"mc",label:"Which report?",q:`${c[0](co)}<br><br>What type of report should the auditor issue?`,ans:c[1],opts:shuffle(opts),w:c[2]}},
+ bankMC("Subsequent events",s=>`After ${pick(["December 31","year-end"])} but before the financial statements are issued:<span class="proc">${s}</span>How should it be handled?`,["Adjust the financial statements","Disclose in the notes only","No adjustment or disclosure"],[
+  ["A major customer files for bankruptcy because of financial trouble that had been building for over a year.","Adjust the financial statements","The condition existed at the balance sheet date, so this is a recognized subsequent event: increase the allowance for doubtful accounts."],
+  ["A lawsuit over an accident that happened last year settles for more than the amount accrued.","Adjust the financial statements","The event behind the lawsuit happened before year-end, so the settlement is evidence about a year-end condition. Adjust the accrual."],
+  ["A fire destroys the company's main warehouse.","Disclose in the notes only","The fire happened after year-end, so it's a nonrecognized subsequent event. Disclose it if it's material."],
+  ["The company issues $5 million of new bonds.","Disclose in the notes only","A new financing after year-end doesn't change year-end balances. Disclose if material."],
+  ["Inventory is sold below its carrying amount, showing it was already worth less at year-end.","Adjust the financial statements","The sale gives evidence of a condition (lower value) that existed at the balance sheet date."],
+  ["The company acquires a competitor.","Disclose in the notes only","A business combination after year-end is a nonrecognized event that is usually disclosed."],
+ ]),
+ bankMC("Independence",s=>`Under the AICPA Code of Professional Conduct, does this impair independence for a nonissuer audit client?<span class="proc">${s}</span>`,["Yes, independence is impaired","No, independence isn't impaired"],[
+  ["A member of the audit team owns a small number of the client's shares, worth far less than materiality.","Yes, independence is impaired","Any direct financial interest held by a covered member impairs independence, no matter how immaterial."],
+  ["The engagement partner's spouse works as a receptionist at the client.","No, independence isn't impaired","Immediate family members can work for an attest client in a position that isn't a key position."],
+  ["The engagement partner's spouse is the client's chief financial officer.","Yes, independence is impaired","An immediate family member in a key position, one with influence over the financial statements, impairs independence."],
+  ["The firm's fee for the audit is contingent on the client getting a bank loan.","Yes, independence is impaired","Contingent fees are prohibited for attest clients."],
+  ["The firm prepares the client's tax return, and management takes responsibility for it.","No, independence isn't impaired","Nonattest services are allowed when management accepts responsibility, has a qualified person overseeing them, and the general requirements are met."],
+  ["The firm's staff authorize and sign the client's checks.","Yes, independence is impaired","Performing management responsibilities, like approving transactions or controlling bank accounts, impairs independence."],
+  ["A covered member has a car loan from the client bank, made under normal lending terms and fully collateralized.","No, independence isn't impaired","Fully collateralized auto loans from a client financial institution under normal terms are permitted loans."],
+ ]),
+ mc([
+  ["Before accepting a new audit client, the successor auditor should…",["Communicate with the predecessor auditor, with the client's permission","Review the predecessor's working papers without asking","Skip the predecessor if the client prefers","Wait until fieldwork starts to contact the predecessor"],"The inquiry covers management's integrity, disagreements, and why the auditor is changing. If the client won't permit it, the successor should consider why."],
+  ["An engagement letter for an audit is…",["Required, documenting the agreed terms in writing","Optional for repeat clients","Signed only by the auditor","Prepared after the report is issued"],"It sets out objectives, scope, and the responsibilities of management and the auditor."],
+  ["Under the AICPA Code, which is NOT generally permitted for an audit client?",["Accepting a contingent fee for the audit","Preparing the client's tax return","Advising on internal control design","Using a client's data for bookkeeping when management approves entries"],"Contingent fees for attest work are prohibited. The others can be acceptable with safeguards."],
+  ["The auditor's report on a nonissuer expresses an opinion on whether the statements are…",["Presented fairly, in all material respects","Free of all errors","Accurate to the dollar","Guaranteed to contain no fraud"],"An audit gives reasonable, not absolute, assurance."],
+ ]),
+];
+const GEN={risk:RISK,ev:EV,ctl:CTL,rep:REP};
+// ================= END CONTENT =================
+
+// ---------- State ----------
+const store={get(){try{return JSON.parse(localStorage.getItem("audDrill")||"{}")}catch(e){return{}}},set(v){try{localStorage.setItem("audDrill",JSON.stringify(v))}catch(e){}}};
+const saved=store.get();
+let S={right:0,total:0,streak:0,best:saved.best||0,life:+saved.life||0,lifeOk:+saved.lifeOk||0,mode:(GEN[saved.mode]||saved.mode==="mix")?saved.mode:"mix"};
+let cur=null,done=false;
+let missed=Array.isArray(saved.missed)?saved.missed:[];
+let redoQ=null;
+const card=document.getElementById("card");
+const persist=()=>store.set({best:S.best,life:S.life,lifeOk:S.lifeOk,mode:S.mode,missed});
+function updStats(){sScore.textContent=`${S.right}/${S.total}`;sStreak.textContent=S.streak;sBest.textContent=S.best}
+function record(ok){S.life++;if(ok)S.lifeOk++;S.total++;if(ok){S.right++;S.streak++;S.best=Math.max(S.best,S.streak)}else S.streak=0;
+  if(!ok&&!cur._mid){missed.push({id:Date.now()+"-"+Math.random().toString(36).slice(2,7),at:new Date().toLocaleDateString("en-US",{month:"short",day:"numeric"}),q:JSON.parse(JSON.stringify(cur))});if(missed.length>150)missed=missed.slice(-150)}
+  if(ok&&cur._mid)missed=missed.filter(m=>m.id!==cur._mid);
+  persist();updStats();renderMissed()}
+const redoTag=()=>cur._mid?`<span class="redo">Redo · ${redoQ?redoQ.length:0} left after this</span>`:"";
+const eyebrow=label=>`<div class="eyebrow"><span class="topic">${TOPICS[cur.topic]}</span><span>${label}</span>${redoTag()}</div>`;
+
+function next(){
+  done=false;
+  if(redoQ){
+    let m=null;while(redoQ.length&&!m){const id=redoQ.shift();m=missed.find(x=>x.id===id)}
+    if(!m){redoQ=null;updRedoBtn();
+      card.innerHTML=`<div class="eyebrow"><span>Redo finished</span></div><p class="prompt">${missed.length?`You've been through every miss. ${missed.length} still on the list: the ones you got wrong again.`:"Every missed question is cleared."}</p><div class="actions"><span class="spacer"></span><button class="btn primary" id="go" type="button">Back to practice →</button></div>`;
+      go.onclick=next;go.focus();return}
+    cur={...m.q,_mid:m.id};display();return;
+  }
+  const topic=S.mode==="mix"?pick(Object.keys(GEN)):S.mode;
+  cur={topic,...pick(GEN[topic])(pick(COS))};
+  display();
+}
+function display(){if(cur.kind==="num")renderNum();else renderMC()}
+
+// ---------- Missed list ----------
+const fmtAns=q=>(q.ans<0?"−":"")+(q.unit==="$"?`$${f(q.ans)}`:q.unit==="%"?`${f(q.ans)}%`:f(q.ans));
+const workTable=rows=>`<div class="tw"><table class="journal"><tbody>${rows.map(([lb,n,c])=>`<tr class="${c||""}"><td>${lb}</td><td class="n">${n}</td></tr>`).join("")}</tbody></table></div>`;
+function answerHTML(q){return q.kind==="num"?`<div><b>Answer:</b> ${fmtAns(q)}</div>${workTable(q.rows)}`:`<div><b>Answer:</b> ${q.ans}</div>`}
+function renderMissed(){
+  missN.textContent=`(${missed.length})`;
+  const list=[...missed].reverse().slice(0,60);
+  missList.innerHTML=missed.length?list.map(m=>`<div class="miss"><div class="when">${m.at} · ${TOPICS[m.q.topic]} · ${m.q.label||(m.q.kind==="num"?"Calculation":"Concept check")}</div><div class="mq">${m.q.q||m.q.t}</div>${answerHTML(m.q)}<p>${m.q.w}</p></div>`).join("")+(missed.length>60?`<p class="note">Showing the 60 most recent of ${missed.length}.</p>`:"")
+    :`<p class="note">Nothing here yet. Questions you miss will show up here.</p>`;
+  updRedoBtn();
+}
+function updRedoBtn(){redoBtn.textContent=redoQ?"Stop redo":`Redo my misses${missed.length?` (${missed.length})`:""}`;redoBtn.disabled=!redoQ&&!missed.length}
+redoBtn.onclick=()=>{if(redoQ){redoQ=null;updRedoBtn();next();return}redoQ=shuffle(missed.map(m=>m.id));updRedoBtn();next();card.scrollIntoView({block:"start",behavior:"smooth"})};
+function armed(btn,label,armedLabel,action){let on=false,t;btn.onclick=()=>{if(!on){on=true;btn.textContent=armedLabel;btn.classList.add("armed");t=setTimeout(()=>{on=false;btn.textContent=label;btn.classList.remove("armed")},4000);return}
+  clearTimeout(t);on=false;btn.textContent=label;btn.classList.remove("armed");action()}}
+armed(clearMiss,"Clear list","Click again to clear",()=>{missed=[];redoQ=null;persist();renderMissed()});
+armed(resetStats,"Reset","Click again",()=>{S.right=0;S.total=0;S.streak=0;S.best=0;persist();updStats()});
+
+// ---------- Numeric ----------
+const parse=v=>{let s=String(v).trim(),neg=/^\(.*\)$/.test(s)||/^[-−]/.test(s);const n=parseFloat(s.replace(/[$,%\s()−-]/g,""));return isFinite(n)?(neg?-1:1)*n:NaN};
+function renderNum(){
+  const pre=cur.unit==="$"?"$":"",post=cur.unit==="%"?"%":"";
+  card.innerHTML=`${eyebrow("Calculation")}<div class="prompt">${cur.t}</div>
+  <label class="numin" id="nwrap">${pre?`<span>${pre}</span>`:""}<input id="num" inputmode="decimal" placeholder="0" aria-label="Your answer">${post?`<span>${post}</span>`:""}</label>
+  <p class="note" style="margin:6px 0 0">${cur.hint?cur.hint:cur.unit==="%"?"Enter a percent, e.g. 12.5. Two decimals is plenty.":cur.unit==="$"?"Round to the nearest dollar.":"Enter a whole number."}</p>
+  <div class="actions"><span class="spacer"></span><button class="btn" id="show" type="button">Show answer</button><button class="btn primary" id="go" type="button">Check</button></div><div id="out"></div>`;
+  const fin=revealed=>{
+    const v=parse(num.value);
+    if(!revealed&&!isFinite(v)){out.innerHTML=`<div class="fb"><p class="note">Enter a number.</p></div>`;return}
+    done=true;const ok=!revealed&&Math.abs(v-cur.ans)<=(cur.tol||.5);record(ok);num.disabled=true;
+    if(!revealed)nwrap.classList.add(ok?"ok":"no");
+    out.innerHTML=`<div class="fb ${revealed?"":ok?"good":"bad"}"><h3>${revealed?"Here's the answer":ok?"Correct":`Not quite. The answer is ${fmtAns(cur)}`}</h3>${workTable(cur.rows)}<p>${cur.w}</p></div>`;
+    show.hidden=true;go.textContent="Next question →";go.focus();
+  };
+  num.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();done?next():fin(false)}};
+  go.onclick=()=>done?next():fin(false);
+  show.onclick=()=>{if(!done)fin(true)};
+}
+
+// ---------- Multiple choice ----------
+function renderMC(){
+  card.innerHTML=`${eyebrow(cur.label||"Concept check")}<div class="prompt">${cur.q}</div>
+  <div class="opts">${cur.opts.map(o=>`<button class="opt" type="button">${o}</button>`).join("")}</div>
+  <div id="out"></div><div class="actions"><span class="spacer"></span><button class="btn primary" id="go" type="button" hidden>Next question →</button></div>`;
+  card.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{
+    if(done)return;done=true;const ok=b.textContent===cur.ans;record(ok);
+    card.querySelectorAll(".opt").forEach(x=>{x.disabled=true;if(x.textContent===cur.ans)x.classList.add("ok")});
+    if(!ok)b.classList.add("no");
+    out.innerHTML=`<div class="fb ${ok?"good":"bad"}"><h3>${ok?"Correct":"Not quite"}</h3><p>${cur.w}</p></div>`;
+    go.hidden=false;go.onclick=next;go.focus();
+  });
+}
+
+// ---------- Modes ----------
+document.querySelectorAll(".modes button").forEach(b=>{
+  b.setAttribute("aria-pressed",b.dataset.mode===S.mode);
+  b.onclick=()=>{S.mode=b.dataset.mode;redoQ=null;persist();updRedoBtn();
+    document.querySelectorAll(".modes button").forEach(x=>x.setAttribute("aria-pressed",x===b));next()};
+});
+updStats();renderMissed();next();
+</script>
+</body>
+</html>

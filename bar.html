@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BAR Drill</title>
+<style>
+[hidden]{display:none!important}
+body{margin:0}
+/* Layout: ninth pad in the series; steel blue accent marks this as the BAR pad. Same ruled card and red margin line as the other pads */
+:root{
+  --paper:#f3f2ec; --card:#fcfbf7; --rule:#e2dfd3; --ink:#24221b; --muted:#66624f;
+  --margin:#c4473a; --accent:#3d5a80; --accent-soft:#e1e8f2;
+  --good:#2c7a4c; --good-soft:#e2f2e8; --bad:#b3382c; --bad-soft:#f8e4e1;
+  --line:#d3cfbf;
+  --display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --body:"Public Sans",ui-sans-serif,system-ui,-apple-system,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#151410; --card:#1e1c17; --rule:#2c2a22; --ink:#ebe8dd; --muted:#a5a08c;
+  --margin:#d46a5d; --accent:#9fbfe8; --accent-soft:#1d2a3a;
+  --good:#6cc894; --good-soft:#1c3327; --bad:#ec8276; --bad-soft:#3a201d; --line:#38352b; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#151410; --card:#1e1c17; --rule:#2c2a22; --ink:#ebe8dd; --muted:#a5a08c;
+  --margin:#d46a5d; --accent:#9fbfe8; --accent-soft:#1d2a3a;
+  --good:#6cc894; --good-soft:#1c3327; --bad:#ec8276; --bad-soft:#3a201d; --line:#38352b; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+.wrap{max-width:740px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.back{align-self:flex-start;font:600 .78rem var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-decoration:none;border:1px dashed var(--line);border-radius:6px;padding:4px 9px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
+h1{font-family:var(--display);font-weight:800;font-size:2rem;line-height:1;margin:0;letter-spacing:-.02em}
+h1 span{color:var(--accent)}
+.sub{margin:4px 0 0;color:var(--muted);font-size:.9rem;max-width:46ch}
+.stats{display:flex;gap:14px;font-family:var(--mono);font-size:.82rem;color:var(--muted)}
+.stats b{display:block;font-size:1.15rem;color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+.stats .reset{align-self:flex-end;font:600 .72rem var(--mono);color:var(--muted);background:transparent;border:1px dashed var(--line);border-radius:6px;padding:4px 8px;cursor:pointer}
+.stats .reset.armed{color:var(--bad);border-color:var(--bad)}
+
+.modes{display:flex;gap:4px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:4px;width:fit-content;max-width:100%;flex-wrap:wrap}
+.modes button{font:600 .85rem var(--body);border:0;background:transparent;color:var(--muted);padding:7px 12px;border-radius:7px;cursor:pointer}
+.modes button[aria-pressed="true"]{background:var(--accent);color:var(--card)}
+button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.card{position:relative;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px 20px 20px 34px;
+  background-image:repeating-linear-gradient(to bottom,transparent 0,transparent 31px,var(--rule) 31px,var(--rule) 32px);background-position:0 14px}
+.card::before{content:"";position:absolute;left:18px;top:0;bottom:0;width:2px;background:var(--margin);opacity:.55}
+.eyebrow{font:600 .72rem var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--margin);display:flex;gap:10px;flex-wrap:wrap}
+.eyebrow .topic{color:var(--accent)}
+.redo{color:var(--accent)!important}
+.prompt{font-size:1.06rem;font-weight:500;margin:8px 0 16px;max-width:64ch;text-wrap:pretty}
+.prompt strong{font-family:var(--mono);font-weight:600;background:var(--accent-soft);color:var(--accent);padding:0 4px;border-radius:4px;white-space:nowrap}
+.prompt ul{margin:8px 0 0;padding-left:20px}
+.prompt li{margin:2px 0}
+.prompt .proc{display:block;margin-top:8px;padding:8px 12px;border-left:3px solid var(--accent);background:var(--accent-soft);border-radius:0 8px 8px 0;font-weight:500}
+.tw{overflow-x:auto}
+
+.numin{display:flex;align-items:center;gap:8px;max-width:240px}
+.numin span{font:600 1.1rem var(--mono);color:var(--muted)}
+.numin input{width:100%;font:500 .95rem var(--mono);text-align:right;font-variant-numeric:tabular-nums;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:9px 10px;min-width:0}
+.numin.ok input{border-color:var(--good);background:var(--good-soft)}
+.numin.no input{border-color:var(--bad);background:var(--bad-soft)}
+
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.btn{font:600 .92rem var(--body);border-radius:9px;padding:10px 16px;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--card)}
+.btn.ghost{border-style:dashed;color:var(--muted)}
+.btn.sm{padding:6px 12px;font-size:.85rem}
+.btn:disabled{opacity:.5;cursor:default}
+.spacer{flex:1}
+
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px}
+.opt{font:600 .95rem var(--body);padding:12px 14px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;text-align:left}
+.opt:hover:not(:disabled){border-color:var(--accent)}
+.opt.ok{background:var(--good-soft);border-color:var(--good);color:var(--good)}
+.opt.no{background:var(--bad-soft);border-color:var(--bad);color:var(--bad)}
+.opt:disabled{cursor:default}
+
+.fb{margin-top:16px;padding:14px 16px;border-radius:10px;border:1px solid var(--line);background:var(--card)}
+.fb.good{border-color:var(--good)}.fb.bad{border-color:var(--bad)}
+.fb h3{margin:0 0 8px;font:800 1.1rem var(--display)}
+.fb.good h3{color:var(--good)}.fb.bad h3{color:var(--bad)}
+.fb p{margin:8px 0 0;max-width:64ch}
+.journal{width:100%;border-collapse:collapse;font-size:.92rem;min-width:300px}
+.journal td{padding:5px 6px;border-bottom:1px solid var(--rule)}
+.journal td.n{font-family:var(--mono);text-align:right;width:130px;font-variant-numeric:tabular-nums}
+.journal tr.tot td{font-weight:700;border-top:2px solid var(--ink)}
+.note{color:var(--muted);font-size:.88rem}
+
+details{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 16px}
+summary{cursor:pointer;font-weight:700}
+details h4{font:800 1rem var(--display);margin:16px 0 4px;color:var(--accent)}
+.refl{margin:4px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:4px;font-size:.92rem}
+.rules{width:100%;border-collapse:collapse;margin-top:8px;font-size:.9rem;min-width:460px}
+.rules th,.rules td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--rule);vertical-align:top}
+.rules th{font:600 .72rem var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.missbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
+.misslist{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+.miss{border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:var(--paper)}
+.miss .when{font:600 .7rem var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.miss .mq{margin:4px 0 8px;font-weight:500}
+.miss .mq strong{font-family:var(--mono)}
+.miss .mq ul{margin:6px 0 0;padding-left:20px}
+.miss p{margin:6px 0 0;font-size:.9rem;color:var(--muted)}
+@media (max-width:540px){.card{padding:16px 14px 16px 28px}.card::before{left:13px}}
+@media (prefers-reduced-motion:no-preference){.fb{animation:in .18s ease-out}@keyframes in{from{opacity:.4;transform:translateY(3px)}}}
+</style>
+<style>
+/* ---- Classic plain-web skin ---- */
+html:root:not(#x){
+  --paper:#ffffff; --card:#ffffff; --rule:#cccccc; --ink:#000000; --muted:#444444;
+  --margin:#000000; --accent:#0000cc; --accent-soft:#eeeeff;
+  --good:#006600; --good-soft:#e8f5e8; --bad:#cc0000; --bad-soft:#fdeaea;
+  --line:#999999; --head:#e4e4e4; --cell:#ffffff;
+  --display:"Times New Roman",Times,serif; --body:"Times New Roman",Times,serif;
+  --mono:"Courier New",Courier,monospace; color-scheme:light}
+*,*::before,*::after{border-radius:0!important;background-image:none!important;box-shadow:none!important;text-shadow:none!important;animation:none!important;transition:none!important}
+body{background:#fff!important;color:#000;font:17px/1.45 "Times New Roman",Times,serif!important;padding:16px 16px 40px!important}
+.wrap{max-width:760px!important;gap:14px!important}
+.card::before,.card *::before{display:none!important}
+.card{padding:14px 16px!important;border:1px solid #999!important}
+h1{font:bold 2rem/1.15 "Times New Roman",Times,serif!important;letter-spacing:0!important}
+h1 span{color:inherit!important}
+h2,h3,summary{letter-spacing:0!important}
+.sub{color:#333!important;font-style:italic}
+.eyebrow{letter-spacing:0!important;text-transform:none!important;color:#555!important;font:italic .9rem "Times New Roman",Times,serif!important}
+.prompt strong{background:none!important;color:#000!important;padding:0!important;text-decoration:underline}
+.stats{font-family:Arial,Helvetica,sans-serif!important}
+.stats b{font-family:"Times New Roman",Times,serif!important}
+/* mode tabs as a plain text menu */
+.modes{background:none!important;border:0!important;padding:0!important;gap:0 6px!important}
+.modes button{background:none!important;color:#0000cc!important;text-decoration:underline;font:16px "Times New Roman",Times,serif!important;padding:2px 4px!important;border:0!important}
+.modes button[aria-pressed="true"]{color:#000!important;text-decoration:none;font-weight:bold!important}
+.modes button+button::before{content:"|";color:#999;margin-right:8px;text-decoration:none;display:inline-block}
+/* default-looking form buttons */
+.btn,.stats .reset{font:14px Arial,Helvetica,sans-serif!important;background:#efefef!important;color:#000!important;border:1px solid #767676!important;padding:5px 12px!important;cursor:pointer}
+.btn:hover:not(:disabled),.stats .reset:hover{background:#e2e2e2!important}
+.btn.primary{font-weight:bold!important}
+.btn.ghost{border-style:solid!important;color:#000!important}
+.stats .reset.armed{color:#c00!important;border-color:#c00!important}
+.opt{font:16px "Times New Roman",Times,serif!important;border:1px solid #999!important;padding:10px 12px!important}
+.opt:hover:not(:disabled){border-color:#0000cc!important;background:#f4f4ff}
+select,input,textarea{font-family:Arial,Helvetica,sans-serif!important;border:1px solid #767676!important}
+details{border:1px solid #999!important;background:#fff!important}
+summary{font-weight:bold}
+.hint{border-left:3px solid #0000cc!important}
+.miss{background:#f7f7f7!important;border:1px solid #bbb!important}
+.redo{color:#0000cc!important;text-decoration:underline}
+th{letter-spacing:0!important}
+a{color:#0000cc}
+a:visited{color:#551a8b}
+.backlink{font:16px "Times New Roman",Times,serif;align-self:flex-start}
+.sitefoot{margin-top:18px;font-size:.95rem;color:#333}
+.sitefoot hr{border:0;border-top:1px solid #999;margin:0 0 8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="backlink" href="./">&larr; Back to all drills</a>
+  <header>
+    <div>
+      <h1>BAR <span>Drill</span></h1>
+      <p class="sub">Cost and managerial accounting, financial analysis, technical accounting and government. Endless CPA-style questions with the work shown.</p>
+    </div>
+    <div class="stats" aria-live="polite">
+      <div>Score<b id="sScore">0/0</b></div>
+      <div>Streak<b id="sStreak">0</b></div>
+      <div>Best<b id="sBest">0</b></div>
+      <button class="reset" id="resetStats" type="button">Reset</button>
+    </div>
+  </header>
+
+  <div class="modes" role="group" aria-label="Topic">
+    <button id="mMix" data-mode="mix" aria-pressed="true">Mixed</button>
+    <button id="mman" data-mode="man" aria-pressed="false">Cost &amp; managerial</button>
+    <button id="mfin" data-mode="fin" aria-pressed="false">Financial analysis</button>
+    <button id="madv" data-mode="adv" aria-pressed="false">Technical accounting</button>
+    <button id="mgov" data-mode="gov" aria-pressed="false">Government</button>
+  </div>
+
+  <section class="card" id="card" aria-live="polite"></section>
+
+  <details id="missDet">
+    <summary>Missed questions <span id="missN">(0)</span></summary>
+    <p class="note">Every question you miss or reveal is saved here with its answer. Redo them: a question leaves the list once you get it right.</p>
+    <div class="missbar">
+      <button class="btn primary sm" id="redoBtn" type="button">Redo my misses</button>
+      <span class="spacer"></span>
+      <button class="btn ghost sm" id="clearMiss" type="button">Clear list</button>
+    </div>
+    <div class="misslist" id="missList"></div>
+  </details>
+
+  <details>
+    <summary>BAR reference sheet</summary>
+    <h4>Cost and managerial</h4>
+    <ul class="refl">
+      <li>Breakeven units = fixed costs ÷ contribution margin per unit. Add target profit to fixed costs for target units.</li>
+      <li>Materials price variance = (AP − SP) × AQ. Quantity variance = (AQ − SQ) × SP. Positive is unfavorable.</li>
+      <li>High-low: variable rate = change in cost ÷ change in activity, using the highest and lowest activity levels.</li>
+      <li>Only avoidable, future costs that differ between choices are relevant.</li>
+    </ul>
+    <h4>Financial analysis</h4>
+    <ul class="refl">
+      <li>Current ratio = current assets ÷ current liabilities. Quick ratio = (cash + marketable securities + receivables) ÷ current liabilities.</li>
+      <li>Inventory turnover = COGS ÷ average inventory. ROE = net income ÷ average equity.</li>
+    </ul>
+    <h4>Technical accounting</h4>
+    <ul class="refl">
+      <li>Goodwill = consideration + fair value of NCI − fair value of identifiable net assets.</li>
+      <li>Equity method: investment + share of income − share of dividends.</li>
+    </ul>
+    <h4>Government</h4>
+    <ul class="refl">
+      <li>Governmental funds: modified accrual, revenue when measurable and available (property taxes: within about 60 days).</li>
+      <li>Government-wide, proprietary and fiduciary: full accrual.</li>
+    </ul>
+  </details>
+
+  <div class="sitefoot"><hr>Accounting Drill Pads &middot; Built by Keith Silverstein &middot; UConn School of Business</div>
+</div>
+
+<script>
+// ---------- Helpers ----------
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const r=(min,max,step)=>Math.round((min+Math.random()*(max-min))/step)*step||step;
+const f=n=>Math.abs(n).toLocaleString("en-US",{maximumFractionDigits:2});
+const $=n=>`<strong>$${f(n)}</strong>`;
+const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const COS=["Harbor Lane Bikes","Northgate Tutoring","Pine Hollow Landscaping","Bluebird Print Shop","Summit Tech Repair","Atlas Moving Co.","Maple Street Dental Lab","Ridgeview Photo Studio","Riverbend Pool Service","Cobalt Coworking","Granite Peak Outfitters","Lumen Software"];
+// fixed-option MC from a scenario bank: each item [scenario, answer, why]
+const bankMC=(label,ask,opts,bank)=>()=>{const c=pick(bank);return{kind:"mc",label,q:`${ask(c[0])}`,ans:c[1],opts:shuffle(opts),w:c[2]}};
+const optsFrom=(pool,ans,n=4)=>shuffle([ans,...shuffle(pool.filter(x=>x!==ans)).slice(0,n-1)]);
+const bankPick=(label,ask,pool,bank,n=4)=>()=>{const c=pick(bank);return{kind:"mc",label,q:ask(c[0]),ans:c[1],opts:optsFrom(pool,c[1],n),w:c[2]}};
+const PEOPLE=["Jordan","Priya","Marcus","Elena","Tyler","Aisha","Ben","Sofia","Noah","Grace"];
+const mc=list=>()=>{const c=pick(list);return{kind:"mc",q:c[0],ans:c[1][0],opts:shuffle(c[1]),w:c[2]}};
+
+// ================= CONTENT =================
+const TOPICS={man:"Cost & managerial",fin:"Financial analysis",adv:"Technical accounting",gov:"State & local government"};
+const r2=x=>Math.round(x*100)/100;
+
+// ================= COST & MANAGERIAL =================
+const MAN=[
+ co=>{const P=r(20,300,5),VC=r(Math.round(P*.3),Math.round(P*.75),1),cm=P-VC,FC=Math.round(r(50000,900000,5000)/cm)*cm,tgt=Math.random()<.5?0:Math.round(r(20000,300000,5000)/cm)*cm,u=(FC+tgt)/cm;
+   return{kind:"num",unit:"",tol:.5,hint:"Enter a number of units.",t:`${co} sells one product for ${$(P)} per unit. Variable cost is ${$(VC)} per unit and fixed costs are ${$(FC)} per year. How many units must it sell to ${tgt?`earn an operating income of ${$(tgt)}`:"break even"}?`,ans:u,
+   rows:[["Contribution margin per unit (price − variable cost)",`$${f(cm)}`],[tgt?"Fixed costs + target income":"Fixed costs",`$${f(FC+tgt)}`],["Units = (fixed costs + target) ÷ CM per unit",f(u),"tot"]],
+   w:"Each unit sold contributes its margin toward covering fixed costs first, then profit. Breakeven in dollars would be fixed costs ÷ the contribution margin ratio."}},
+ co=>{const SP=r2(r(200,2000,5)/100),AP=r2(SP+pick([-1,1])*r(5,60,1)/100),AQ=r(5000,60000,100),SQ=r(Math.round(AQ*.85/100)*100,Math.round(AQ*1.1/100)*100,100),kind=pick(["price","qty"]);
+   const pv=Math.round((AP-SP)*AQ),qv=Math.round((AQ-SQ)*SP),v=kind==="price"?pv:qv;
+   if(v===0)return MAN[1](co);
+   const lab=x=>`$${f(x)} ${x>0?"unfavorable":"favorable"}`,wrong=kind==="price"?Math.round((AP-SP)*SQ):Math.round((AQ-SQ)*AP);
+   const opts=[...new Set([lab(v),`$${f(v)} ${v>0?"favorable":"unfavorable"}`,lab(wrong===v?v+Math.sign(v)*100:wrong),`$${f(wrong===v?v+Math.sign(v)*100:wrong)} ${wrong>0?"favorable":"unfavorable"}`])];
+   return{kind:"mc",label:"Variance analysis",q:`${co}'s standard for direct materials is <strong>$${SP.toFixed(2)}</strong> per pound. Last month it bought and used ${f(AQ)} pounds at <strong>$${AP.toFixed(2)}</strong> per pound. The standard quantity allowed for actual production was ${f(SQ)} pounds. What is the materials <em>${kind==="price"?"price":"quantity (usage)"}</em> variance?`,ans:lab(v),opts:shuffle(opts),
+   w:kind==="price"?`Price variance = (actual price − standard price) × actual quantity = ($${AP.toFixed(2)} − $${SP.toFixed(2)}) × ${f(AQ)} = $${f(pv)}, ${pv>0?"unfavorable because it paid more than standard":"favorable because it paid less than standard"}. A common mistake is multiplying by the standard quantity.`
+     :`Quantity variance = (actual quantity − standard quantity) × standard price = (${f(AQ)} − ${f(SQ)}) × $${SP.toFixed(2)} = $${f(qv)}, ${qv>0?"unfavorable because it used more than allowed":"favorable because it used less than allowed"}. Use the standard price, not the actual price, so the quantity variance isn't polluted by price changes.`}},
+ co=>{const v=r2(r(150,2500,5)/100),F=r(10000,200000,1000),lo=r(1000,8000,100),hi=lo+r(2000,15000,100),cl=Math.round(F+v*lo),ch=Math.round(F+v*hi),vv=r2((ch-cl)/(hi-lo));
+   return{kind:"num",unit:"$",tol:.01,hint:"Enter dollars per unit, to the cent.",t:`${co}'s maintenance cost was ${$(ch)} in its busiest month (${f(hi)} machine hours) and ${$(cl)} in its slowest month (${f(lo)} machine hours). Using the high-low method, what is the variable cost per machine hour?`,ans:vv,
+   rows:[["Change in cost",`$${f(ch-cl)}`],["Change in machine hours",f(hi-lo)],["Variable cost per hour",`$${vv.toFixed(2)}`,"tot"],["Fixed cost (high cost − variable × high hours)",`$${f(Math.round(ch-vv*hi))}`]],
+   w:"High-low uses only the highest and lowest activity levels, chosen by activity, not by cost. It's quick but ignores everything in between, so regression is more accurate."}},
+ co=>{const u=r(2000,30000,500),vc=r(10,80,1),afc=r(2,20,1),buy=vc+afc+pick([-1,1])*r(1,12,1),d=Math.round((vc+afc-buy)*u),unav=r(20000,200000,5000);
+   return{kind:"num",unit:"$",tol:1,hint:"Enter a decrease as a negative number.",t:`${co} makes ${f(u)} units of a part each year. Variable cost is ${$(vc)} per unit, and allocated fixed overhead is ${$(unav)} per year, none of which would go away. A supervisor's salary of ${$(afc*u)} would be eliminated if it stopped making the part. An outside supplier offers it for ${$(buy)} per unit. By how much would operating income change per year if ${co} buys the part?`,ans:d,
+   rows:[["Relevant cost to make: variable",`$${f(vc*u)}`],["Relevant cost to make: avoidable salary",`$${f(afc*u)}`],["Cost to buy",`($${f(buy*u)})`],["Change in operating income",d<0?`($${f(d)})`:`$${f(d)}`,"tot"]],
+   w:`Only avoidable costs are relevant. The $${f(unav)} of allocated overhead stays either way, so it's ignored. ${d>0?"Buying saves money.":"Making is cheaper."} Qualitative factors like quality and supplier reliability matter too.`}},
+ mc([
+  ["In a special order decision with excess capacity, which cost is usually irrelevant?",["Allocated fixed overhead","Direct materials for the order","Extra shipping for the order","Direct labor for the order"],"With idle capacity, fixed costs don't change. Accept the order if price exceeds incremental cost."],
+  ["Sunk costs are…",["Irrelevant to future decisions","Always relevant","Relevant only in make-or-buy decisions","The same as opportunity costs"],"They've already been incurred and can't be changed by any choice."],
+  ["Under absorption costing, when production exceeds sales, operating income is…",["Higher than under variable costing","Lower than under variable costing","The same under both methods","Always negative"],"Some fixed overhead is deferred in ending inventory under absorption costing."],
+  ["Activity-based costing tends to shift overhead toward…",["Low-volume, complex products","High-volume, simple products","Products with the most direct labor","Products with the lowest prices"],"Volume-based allocation over-costs high-volume products and under-costs complex low-volume ones."],
+  ["A flexible budget is prepared for…",["The actual level of activity achieved","The planned level of activity only","Fixed costs only","Capital projects only"],"Comparing actual results to a flexible budget isolates spending and efficiency from volume effects."],
+ ]),
+];
+
+// ================= FINANCIAL ANALYSIS =================
+const FIN=[
+ co=>{const cash=r(20000,300000,1000),ar=r(30000,400000,1000),inv=r(30000,500000,1000),pre=r(5000,40000,1000),cl=r(Math.round((cash+ar+inv)*.35/1000)*1000,Math.round((cash+ar+inv)*.9/1000)*1000,1000),ask=pick(["cur","quick"]);
+   const v=ask==="cur"?r2((cash+ar+inv+pre)/cl):r2((cash+ar)/cl);
+   return{kind:"num",unit:"",tol:.011,hint:"Enter the ratio to two decimals, e.g. 1.85.",t:`${co}'s balance sheet shows cash of ${$(cash)}, accounts receivable of ${$(ar)}, inventory of ${$(inv)}, prepaid expenses of ${$(pre)} and current liabilities of ${$(cl)}. What is the <em>${ask==="cur"?"current ratio":"quick (acid-test) ratio"}</em>?`,ans:v,
+   rows:ask==="cur"?[["Current assets",`$${f(cash+ar+inv+pre)}`],["÷ Current liabilities",`$${f(cl)}`],["Current ratio",v.toFixed(2),"tot"]]:[["Quick assets (cash + receivables)",`$${f(cash+ar)}`],["÷ Current liabilities",`$${f(cl)}`],["Quick ratio",v.toFixed(2),"tot"]],
+   w:ask==="cur"?"The current ratio uses all current assets.":"The quick ratio leaves out inventory and prepaid expenses because they can't quickly be turned into cash. Marketable securities would be included."}},
+ co=>{const cogs=r(500000,5000000,10000),bi=r(50000,600000,1000),ei=r(50000,600000,1000),avg=(bi+ei)/2,t=r2(cogs/avg),d=r2(365/(cogs/avg)),ask=pick(["t","d"]);
+   return{kind:"num",unit:"",tol:ask==="t"?.011:.6,hint:ask==="t"?"Enter to two decimals.":"Enter days, to one decimal.",t:`${co} had cost of goods sold of ${$(cogs)}. Inventory was ${$(bi)} at the start of the year and ${$(ei)} at the end. What is ${ask==="t"?"<em>inventory turnover</em>":"<em>days' sales in inventory</em> (365-day year)"}?`,ans:ask==="t"?t:d,
+   rows:[["Average inventory",`$${f(avg)}`],["Inventory turnover (COGS ÷ average inventory)",t.toFixed(2),ask==="t"?"tot":""],["Days in inventory (365 ÷ turnover)",d.toFixed(1),ask==="d"?"tot":""]],
+   w:"Turnover uses cost of goods sold, not sales, because inventory is carried at cost. Higher turnover means inventory moves faster."}},
+ co=>{const ni=r(50000,2000000,5000),be=r(ni*3,ni*12,5000),ee=r(be,be*1.3,5000),roe=r2(ni/((be+ee)/2)*100);
+   return{kind:"num",unit:"%",tol:.06,hint:"Enter a percent to two decimals.",t:`${co} reported net income of ${$(ni)}. Stockholders' equity was ${$(be)} at the start of the year and ${$(ee)} at the end. There's no preferred stock. What is return on equity, using average equity?`,ans:roe,
+   rows:[["Average equity",`$${f((be+ee)/2)}`],["ROE = net income ÷ average equity",`${roe.toFixed(2)}%`,"tot"]],
+   w:"DuPont breaks ROE into profit margin × asset turnover × equity multiplier, which shows whether returns come from profitability, efficiency or leverage."}},
+ co=>{const I=r(50000,1000000,5000),cf=r(Math.round(I/8/1000)*1000,Math.round(I/2/1000)*1000,1000),pb=r2(I/cf);
+   return{kind:"num",unit:"",tol:.011,hint:"Enter years to two decimals.",t:`${co} is considering a machine that costs ${$(I)} and will generate even after-tax cash inflows of ${$(cf)} per year. What is the payback period in years?`,ans:pb,
+   rows:[["Initial investment ÷ annual cash inflow",`${f(I)} ÷ ${f(cf)}`],["Payback period (years)",pb.toFixed(2),"tot"]],
+   w:"Payback ignores the time value of money and any cash flows after the payback point, which is why NPV is the better decision rule."}},
+ mc([
+  ["A company's current ratio rose but its quick ratio fell. The most likely cause is…",["A build-up of inventory","Collecting receivables","Paying down accounts payable with cash","Selling inventory for cash"],"Inventory counts in the current ratio but not the quick ratio."],
+  ["Times interest earned is calculated as…",["Earnings before interest and taxes ÷ interest expense","Net income ÷ interest expense","Interest expense ÷ total debt","Operating cash flow ÷ total liabilities"],"It measures how comfortably operating earnings cover interest."],
+  ["Under the DuPont model, return on assets equals…",["Net profit margin × total asset turnover","ROE × equity multiplier","Net income ÷ equity","Asset turnover ÷ profit margin"],"ROE adds a third factor: the equity multiplier (assets ÷ equity)."],
+  ["When projects are mutually exclusive and NPV and IRR rankings conflict, choose the project with the…",["Higher NPV","Higher IRR","Shorter payback","Lower initial cost"],"NPV measures dollars of value added and assumes reinvestment at the cost of capital."],
+ ]),
+];
+
+// ================= TECHNICAL ACCOUNTING =================
+const ADV=[
+ co=>{const own=pick([100,100,80,70,90]),fva=r(400000,5000000,10000),fvl=r(Math.round(fva*.15/1000)*1000,Math.round(fva*.55/1000)*1000,1000),net=fva-fvl,price=r(Math.round(net*own/100*1.05/1000)*1000,Math.round(net*own/100*1.6/1000)*1000,1000),nci=own<100?r(Math.round(price*(100-own)/own*.9/1000)*1000,Math.round(price*(100-own)/own*1.05/1000)*1000,1000):0,gw=price+nci-net;
+   if(gw<=0)return ADV[0](co);
+   return{kind:"num",unit:"$",tol:1,t:`${co} acquires ${own}% of a target company for ${$(price)} in cash. At the acquisition date, the target's identifiable assets have a fair value of ${$(fva)} and its liabilities a fair value of ${$(fvl)}.${own<100?` The fair value of the noncontrolling interest is ${$(nci)}.`:""} What goodwill is recognized?`,ans:gw,
+   rows:[["Consideration transferred",`$${f(price)}`],...(own<100?[["Add: fair value of noncontrolling interest",`$${f(nci)}`]]:[]),["Less: fair value of identifiable net assets",`($${f(net)})`],["Goodwill",`$${f(gw)}`,"tot"]],
+   w:`Under ASC 805, goodwill is the excess of consideration plus the fair value of any noncontrolling interest over the fair value of identifiable net assets. If that came out negative, it would be a bargain purchase gain. Acquisition costs are expensed, not added to goodwill.`}},
+ co=>{const own=pick([20,25,30,35,40]),cost=r(100000,3000000,10000),ni=r(50000,2000000,10000),div=r(0,Math.round(ni*.6/1000)*1000,1000),inc=Math.round(ni*own/100),cv=cost+inc-Math.round(div*own/100),ask=pick(["cv","inc"]);
+   return{kind:"num",unit:"$",tol:1,t:`At the start of the year, ${co} buys ${own}% of an investee's common stock for ${$(cost)}, giving it significant influence. Cost equals its share of the investee's book value. During the year the investee reports net income of ${$(ni)} and pays dividends of ${$(div)}. What is ${ask==="cv"?"<em>the investment's carrying value at year-end</em>":`<em>the investment income ${co} reports</em>`}?`,ans:ask==="cv"?cv:inc,
+   rows:[["Cost",`$${f(cost)}`],[`Add: ${own}% of net income (investment income)`,`$${f(inc)}`,ask==="inc"?"tot":""],[`Less: ${own}% of dividends`,`($${f(Math.round(div*own/100))})`],["Carrying value at year-end",`$${f(cv)}`,ask==="cv"?"tot":""]],
+   w:"Under the equity method, the investor records its share of the investee's income as income and as an increase in the investment. Dividends are a return of investment, so they reduce the carrying value and aren't income."}},
+ mc([
+  ["In a cash flow hedge, the gain or loss on the hedging instrument is initially reported in…",["Other comprehensive income","Net income immediately","Retained earnings directly","Goodwill"],"It's reclassified into earnings when the hedged transaction affects earnings. In a fair value hedge, both sides go through net income."],
+  ["In a business combination, costs like legal and advisory fees are…",["Expensed as incurred","Added to goodwill","Capitalized as an intangible asset","Deducted from the purchase price"],"Stock issuance costs are the exception; they reduce additional paid-in capital."],
+  ["On consolidated statements, noncontrolling interest is reported…",["In equity, separate from the parent's equity","As a liability","Between liabilities and equity","Only in the notes"],"Net income attributable to NCI is also shown separately on the income statement."],
+  ["When consolidating, intercompany sales between parent and subsidiary are…",["Eliminated in full","Eliminated only to the parent's ownership share","Reported as other income","Left in, since they're arm's length"],"Unrealized profit in ending inventory is eliminated too."],
+  ["A change in accounting estimate is accounted for…",["Prospectively, in the current and future periods","Retrospectively, restating prior periods","As a prior-period adjustment to retained earnings","Only in the notes"],"Changes in accounting principle are generally retrospective; error corrections are restatements."],
+ ]),
+];
+
+// ================= STATE & LOCAL GOVERNMENT =================
+const FUNDS=["General fund","Special revenue fund","Capital projects fund","Debt service fund","Permanent fund","Enterprise fund","Internal service fund","Pension trust fund","Custodial fund"];
+const GOV=[
+ bankPick("Fund type",s=>`Which fund should a city use for this activity?<span class="proc">${s}</span>`,FUNDS,[
+  ["A water utility that charges residents fees to cover its costs.","Enterprise fund","Business-type activities that charge the public are enterprise funds."],
+  ["A central motor pool that rents vehicles to other city departments.","Internal service fund","Services provided to other departments on a cost-reimbursement basis go in an internal service fund."],
+  ["A state gas tax restricted to road maintenance.","Special revenue fund","Revenue legally restricted to a specific purpose, other than debt service or capital projects, goes in a special revenue fund."],
+  ["Construction of a new city hall financed by a bond issue.","Capital projects fund","Resources for acquiring or building major capital facilities go in a capital projects fund."],
+  ["Accumulating resources to pay principal and interest on general obligation bonds.","Debt service fund","Resources for long-term debt payments go in a debt service fund."],
+  ["An endowment whose principal must be kept intact, with earnings used to maintain a public cemetery.","Permanent fund","Permanent funds hold resources where only the earnings can be spent, for the government's own programs."],
+  ["Police salaries and other general operations.","General fund","Everything not required to be accounted for elsewhere goes in the general fund."],
+  ["Retirement benefits for city employees, held in a qualifying trust.","Pension trust fund","Pension plans the government administers in trust are fiduciary funds."],
+  ["Sales taxes the county collects for other local governments.","Custodial fund","Resources held for others that don't belong in a trust fund go in a custodial fund."],
+ ]),
+ ()=>{const levy=r(1000000,20000000,10000),unc=Math.round(levy*pick([1,2,3])/100),inyr=Math.round(levy*pick([.85,.88,.9,.92])/1000)*1000,d60=Math.round((levy-unc-inyr)*pick([.3,.5,.6])/1000)*1000,later=levy-unc-inyr-d60,ask=pick(["ma","gw"]),ans=ask==="ma"?inyr+d60:levy-unc;
+   return{kind:"num",unit:"$",tol:1,t:`A city levies ${$(levy)} of property taxes for the current year and expects ${$(unc)} to be uncollectible. It collects ${$(inyr)} during the year and expects ${$(d60)} within the first 60 days of next year, with the remaining ${$(later)} later in the year. How much property tax revenue is reported ${ask==="ma"?"<em>in the general fund (modified accrual)</em>":"<em>in the government-wide statements (full accrual)</em>"}?`,ans,
+   rows:ask==="ma"?[["Collected during the year",`$${f(inyr)}`],["Collected within 60 days after year-end (available)",`$${f(d60)}`],["Modified accrual revenue",`$${f(ans)}`,"tot"],["Collected later: deferred inflow",`$${f(later)}`]]:[["Levy",`$${f(levy)}`],["Less: estimated uncollectible",`($${f(unc)})`],["Accrual revenue",`$${f(ans)}`,"tot"]],
+   w:ask==="ma"?"Governmental funds recognize revenue when it's measurable and available. For property taxes, available means collected within the year or within about 60 days after.":"Government-wide statements use full accrual: property tax revenue is recognized in the year it's levied for, net of estimated uncollectibles."}},
+ mc([
+  ["Governmental funds use which basis of accounting?",["Modified accrual, current financial resources focus","Full accrual, economic resources focus","Cash basis","Full accrual, current financial resources focus"],"Proprietary and fiduciary funds, and the government-wide statements, use full accrual with an economic resources focus."],
+  ["In the general fund, buying a new fire truck is reported as…",["An expenditure","A capital asset","A deferred outflow","An expense spread over its life"],"Governmental funds don't report capital assets. They appear only in the government-wide statements, where they're depreciated."],
+  ["Encumbrances represent…",["Commitments for goods or services ordered but not yet received","Expenditures already paid","Long-term debt","Revenues not yet collected"],"They help keep spending within budgeted appropriations."],
+  ["Who sets accounting standards for state and local governments?",["GASB","FASB","PCAOB","AICPA"],"FASB covers private companies and not-for-profits; the PCAOB sets auditing standards for public companies."],
+  ["Management's discussion and analysis in a government's annual report is…",["Required supplementary information","Optional","Part of the notes","Audited like the basic statements"],"Auditors apply limited procedures to required supplementary information but don't opine on it."],
+ ]),
+];
+const GEN={man:MAN,fin:FIN,adv:ADV,gov:GOV};
+// ================= END CONTENT =================
+
+// ---------- State ----------
+const store={get(){try{return JSON.parse(localStorage.getItem("barDrill")||"{}")}catch(e){return{}}},set(v){try{localStorage.setItem("barDrill",JSON.stringify(v))}catch(e){}}};
+const saved=store.get();
+let S={right:0,total:0,streak:0,best:saved.best||0,life:+saved.life||0,lifeOk:+saved.lifeOk||0,mode:(GEN[saved.mode]||saved.mode==="mix")?saved.mode:"mix"};
+let cur=null,done=false;
+let missed=Array.isArray(saved.missed)?saved.missed:[];
+let redoQ=null;
+const card=document.getElementById("card");
+const persist=()=>store.set({best:S.best,life:S.life,lifeOk:S.lifeOk,mode:S.mode,missed});
+function updStats(){sScore.textContent=`${S.right}/${S.total}`;sStreak.textContent=S.streak;sBest.textContent=S.best}
+function record(ok){S.life++;if(ok)S.lifeOk++;S.total++;if(ok){S.right++;S.streak++;S.best=Math.max(S.best,S.streak)}else S.streak=0;
+  if(!ok&&!cur._mid){missed.push({id:Date.now()+"-"+Math.random().toString(36).slice(2,7),at:new Date().toLocaleDateString("en-US",{month:"short",day:"numeric"}),q:JSON.parse(JSON.stringify(cur))});if(missed.length>150)missed=missed.slice(-150)}
+  if(ok&&cur._mid)missed=missed.filter(m=>m.id!==cur._mid);
+  persist();updStats();renderMissed()}
+const redoTag=()=>cur._mid?`<span class="redo">Redo · ${redoQ?redoQ.length:0} left after this</span>`:"";
+const eyebrow=label=>`<div class="eyebrow"><span class="topic">${TOPICS[cur.topic]}</span><span>${label}</span>${redoTag()}</div>`;
+
+function next(){
+  done=false;
+  if(redoQ){
+    let m=null;while(redoQ.length&&!m){const id=redoQ.shift();m=missed.find(x=>x.id===id)}
+    if(!m){redoQ=null;updRedoBtn();
+      card.innerHTML=`<div class="eyebrow"><span>Redo finished</span></div><p class="prompt">${missed.length?`You've been through every miss. ${missed.length} still on the list: the ones you got wrong again.`:"Every missed question is cleared."}</p><div class="actions"><span class="spacer"></span><button class="btn primary" id="go" type="button">Back to practice →</button></div>`;
+      go.onclick=next;go.focus();return}
+    cur={...m.q,_mid:m.id};display();return;
+  }
+  const topic=S.mode==="mix"?pick(Object.keys(GEN)):S.mode;
+  cur={topic,...pick(GEN[topic])(pick(COS))};
+  display();
+}
+function display(){if(cur.kind==="num")renderNum();else renderMC()}
+
+// ---------- Missed list ----------
+const fmtAns=q=>(q.ans<0?"−":"")+(q.unit==="$"?`$${f(q.ans)}`:q.unit==="%"?`${f(q.ans)}%`:f(q.ans));
+const workTable=rows=>`<div class="tw"><table class="journal"><tbody>${rows.map(([lb,n,c])=>`<tr class="${c||""}"><td>${lb}</td><td class="n">${n}</td></tr>`).join("")}</tbody></table></div>`;
+function answerHTML(q){return q.kind==="num"?`<div><b>Answer:</b> ${fmtAns(q)}</div>${workTable(q.rows)}`:`<div><b>Answer:</b> ${q.ans}</div>`}
+function renderMissed(){
+  missN.textContent=`(${missed.length})`;
+  const list=[...missed].reverse().slice(0,60);
+  missList.innerHTML=missed.length?list.map(m=>`<div class="miss"><div class="when">${m.at} · ${TOPICS[m.q.topic]} · ${m.q.label||(m.q.kind==="num"?"Calculation":"Concept check")}</div><div class="mq">${m.q.q||m.q.t}</div>${answerHTML(m.q)}<p>${m.q.w}</p></div>`).join("")+(missed.length>60?`<p class="note">Showing the 60 most recent of ${missed.length}.</p>`:"")
+    :`<p class="note">Nothing here yet. Questions you miss will show up here.</p>`;
+  updRedoBtn();
+}
+function updRedoBtn(){redoBtn.textContent=redoQ?"Stop redo":`Redo my misses${missed.length?` (${missed.length})`:""}`;redoBtn.disabled=!redoQ&&!missed.length}
+redoBtn.onclick=()=>{if(redoQ){redoQ=null;updRedoBtn();next();return}redoQ=shuffle(missed.map(m=>m.id));updRedoBtn();next();card.scrollIntoView({block:"start",behavior:"smooth"})};
+function armed(btn,label,armedLabel,action){let on=false,t;btn.onclick=()=>{if(!on){on=true;btn.textContent=armedLabel;btn.classList.add("armed");t=setTimeout(()=>{on=false;btn.textContent=label;btn.classList.remove("armed")},4000);return}
+  clearTimeout(t);on=false;btn.textContent=label;btn.classList.remove("armed");action()}}
+armed(clearMiss,"Clear list","Click again to clear",()=>{missed=[];redoQ=null;persist();renderMissed()});
+armed(resetStats,"Reset","Click again",()=>{S.right=0;S.total=0;S.streak=0;S.best=0;persist();updStats()});
+
+// ---------- Numeric ----------
+const parse=v=>{let s=String(v).trim(),neg=/^\(.*\)$/.test(s)||/^[-−]/.test(s);const n=parseFloat(s.replace(/[$,%\s()−-]/g,""));return isFinite(n)?(neg?-1:1)*n:NaN};
+function renderNum(){
+  const pre=cur.unit==="$"?"$":"",post=cur.unit==="%"?"%":"";
+  card.innerHTML=`${eyebrow("Calculation")}<div class="prompt">${cur.t}</div>
+  <label class="numin" id="nwrap">${pre?`<span>${pre}</span>`:""}<input id="num" inputmode="decimal" placeholder="0" aria-label="Your answer">${post?`<span>${post}</span>`:""}</label>
+  <p class="note" style="margin:6px 0 0">${cur.hint?cur.hint:cur.unit==="%"?"Enter a percent, e.g. 12.5. Two decimals is plenty.":cur.unit==="$"?"Round to the nearest dollar.":"Enter a whole number."}</p>
+  <div class="actions"><span class="spacer"></span><button class="btn" id="show" type="button">Show answer</button><button class="btn primary" id="go" type="button">Check</button></div><div id="out"></div>`;
+  const fin=revealed=>{
+    const v=parse(num.value);
+    if(!revealed&&!isFinite(v)){out.innerHTML=`<div class="fb"><p class="note">Enter a number.</p></div>`;return}
+    done=true;const ok=!revealed&&Math.abs(v-cur.ans)<=(cur.tol||.5);record(ok);num.disabled=true;
+    if(!revealed)nwrap.classList.add(ok?"ok":"no");
+    out.innerHTML=`<div class="fb ${revealed?"":ok?"good":"bad"}"><h3>${revealed?"Here's the answer":ok?"Correct":`Not quite. The answer is ${fmtAns(cur)}`}</h3>${workTable(cur.rows)}<p>${cur.w}</p></div>`;
+    show.hidden=true;go.textContent="Next question →";go.focus();
+  };
+  num.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();done?next():fin(false)}};
+  go.onclick=()=>done?next():fin(false);
+  show.onclick=()=>{if(!done)fin(true)};
+}
+
+// ---------- Multiple choice ----------
+function renderMC(){
+  card.innerHTML=`${eyebrow(cur.label||"Concept check")}<div class="prompt">${cur.q}</div>
+  <div class="opts">${cur.opts.map(o=>`<button class="opt" type="button">${o}</button>`).join("")}</div>
+  <div id="out"></div><div class="actions"><span class="spacer"></span><button class="btn primary" id="go" type="button" hidden>Next question →</button></div>`;
+  card.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{
+    if(done)return;done=true;const ok=b.textContent===cur.ans;record(ok);
+    card.querySelectorAll(".opt").forEach(x=>{x.disabled=true;if(x.textContent===cur.ans)x.classList.add("ok")});
+    if(!ok)b.classList.add("no");
+    out.innerHTML=`<div class="fb ${ok?"good":"bad"}"><h3>${ok?"Correct":"Not quite"}</h3><p>${cur.w}</p></div>`;
+    go.hidden=false;go.onclick=next;go.focus();
+  });
+}
+
+// ---------- Modes ----------
+document.querySelectorAll(".modes button").forEach(b=>{
+  b.setAttribute("aria-pressed",b.dataset.mode===S.mode);
+  b.onclick=()=>{S.mode=b.dataset.mode;redoQ=null;persist();updRedoBtn();
+    document.querySelectorAll(".modes button").forEach(x=>x.setAttribute("aria-pressed",x===b));next()};
+});
+updStats();renderMissed();next();
+</script>
+</body>
+</html>
