@@ -1,0 +1,438 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ISC Drill</title>
+<style>
+[hidden]{display:none!important}
+body{margin:0}
+/* Layout: tenth pad in the series; indigo accent marks this as the ISC pad. Same ruled card and red margin line as the other pads */
+:root{
+  --paper:#f3f2ec; --card:#fcfbf7; --rule:#e2dfd3; --ink:#24221b; --muted:#66624f;
+  --margin:#c4473a; --accent:#5a46b0; --accent-soft:#e9e5f8;
+  --good:#2c7a4c; --good-soft:#e2f2e8; --bad:#b3382c; --bad-soft:#f8e4e1;
+  --line:#d3cfbf;
+  --display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --body:"Public Sans",ui-sans-serif,system-ui,-apple-system,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#151410; --card:#1e1c17; --rule:#2c2a22; --ink:#ebe8dd; --muted:#a5a08c;
+  --margin:#d46a5d; --accent:#b3a6f2; --accent-soft:#2a2445;
+  --good:#6cc894; --good-soft:#1c3327; --bad:#ec8276; --bad-soft:#3a201d; --line:#38352b; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#151410; --card:#1e1c17; --rule:#2c2a22; --ink:#ebe8dd; --muted:#a5a08c;
+  --margin:#d46a5d; --accent:#b3a6f2; --accent-soft:#2a2445;
+  --good:#6cc894; --good-soft:#1c3327; --bad:#ec8276; --bad-soft:#3a201d; --line:#38352b; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+.wrap{max-width:740px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.back{align-self:flex-start;font:600 .78rem var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-decoration:none;border:1px dashed var(--line);border-radius:6px;padding:4px 9px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
+h1{font-family:var(--display);font-weight:800;font-size:2rem;line-height:1;margin:0;letter-spacing:-.02em}
+h1 span{color:var(--accent)}
+.sub{margin:4px 0 0;color:var(--muted);font-size:.9rem;max-width:46ch}
+.stats{display:flex;gap:14px;font-family:var(--mono);font-size:.82rem;color:var(--muted)}
+.stats b{display:block;font-size:1.15rem;color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+.stats .reset{align-self:flex-end;font:600 .72rem var(--mono);color:var(--muted);background:transparent;border:1px dashed var(--line);border-radius:6px;padding:4px 8px;cursor:pointer}
+.stats .reset.armed{color:var(--bad);border-color:var(--bad)}
+
+.modes{display:flex;gap:4px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:4px;width:fit-content;max-width:100%;flex-wrap:wrap}
+.modes button{font:600 .85rem var(--body);border:0;background:transparent;color:var(--muted);padding:7px 12px;border-radius:7px;cursor:pointer}
+.modes button[aria-pressed="true"]{background:var(--accent);color:var(--card)}
+button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.card{position:relative;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px 20px 20px 34px;
+  background-image:repeating-linear-gradient(to bottom,transparent 0,transparent 31px,var(--rule) 31px,var(--rule) 32px);background-position:0 14px}
+.card::before{content:"";position:absolute;left:18px;top:0;bottom:0;width:2px;background:var(--margin);opacity:.55}
+.eyebrow{font:600 .72rem var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--margin);display:flex;gap:10px;flex-wrap:wrap}
+.eyebrow .topic{color:var(--accent)}
+.redo{color:var(--accent)!important}
+.prompt{font-size:1.06rem;font-weight:500;margin:8px 0 16px;max-width:64ch;text-wrap:pretty}
+.prompt strong{font-family:var(--mono);font-weight:600;background:var(--accent-soft);color:var(--accent);padding:0 4px;border-radius:4px;white-space:nowrap}
+.prompt ul{margin:8px 0 0;padding-left:20px}
+.prompt li{margin:2px 0}
+.prompt .proc{display:block;margin-top:8px;padding:8px 12px;border-left:3px solid var(--accent);background:var(--accent-soft);border-radius:0 8px 8px 0;font-weight:500}
+.tw{overflow-x:auto}
+
+.numin{display:flex;align-items:center;gap:8px;max-width:240px}
+.numin span{font:600 1.1rem var(--mono);color:var(--muted)}
+.numin input{width:100%;font:500 .95rem var(--mono);text-align:right;font-variant-numeric:tabular-nums;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:9px 10px;min-width:0}
+.numin.ok input{border-color:var(--good);background:var(--good-soft)}
+.numin.no input{border-color:var(--bad);background:var(--bad-soft)}
+
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.btn{font:600 .92rem var(--body);border-radius:9px;padding:10px 16px;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--card)}
+.btn.ghost{border-style:dashed;color:var(--muted)}
+.btn.sm{padding:6px 12px;font-size:.85rem}
+.btn:disabled{opacity:.5;cursor:default}
+.spacer{flex:1}
+
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px}
+.opt{font:600 .95rem var(--body);padding:12px 14px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;text-align:left}
+.opt:hover:not(:disabled){border-color:var(--accent)}
+.opt.ok{background:var(--good-soft);border-color:var(--good);color:var(--good)}
+.opt.no{background:var(--bad-soft);border-color:var(--bad);color:var(--bad)}
+.opt:disabled{cursor:default}
+
+.fb{margin-top:16px;padding:14px 16px;border-radius:10px;border:1px solid var(--line);background:var(--card)}
+.fb.good{border-color:var(--good)}.fb.bad{border-color:var(--bad)}
+.fb h3{margin:0 0 8px;font:800 1.1rem var(--display)}
+.fb.good h3{color:var(--good)}.fb.bad h3{color:var(--bad)}
+.fb p{margin:8px 0 0;max-width:64ch}
+.journal{width:100%;border-collapse:collapse;font-size:.92rem;min-width:300px}
+.journal td{padding:5px 6px;border-bottom:1px solid var(--rule)}
+.journal td.n{font-family:var(--mono);text-align:right;width:130px;font-variant-numeric:tabular-nums}
+.journal tr.tot td{font-weight:700;border-top:2px solid var(--ink)}
+.note{color:var(--muted);font-size:.88rem}
+
+details{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 16px}
+summary{cursor:pointer;font-weight:700}
+details h4{font:800 1rem var(--display);margin:16px 0 4px;color:var(--accent)}
+.refl{margin:4px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:4px;font-size:.92rem}
+.rules{width:100%;border-collapse:collapse;margin-top:8px;font-size:.9rem;min-width:460px}
+.rules th,.rules td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--rule);vertical-align:top}
+.rules th{font:600 .72rem var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.missbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
+.misslist{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+.miss{border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:var(--paper)}
+.miss .when{font:600 .7rem var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.miss .mq{margin:4px 0 8px;font-weight:500}
+.miss .mq strong{font-family:var(--mono)}
+.miss .mq ul{margin:6px 0 0;padding-left:20px}
+.miss p{margin:6px 0 0;font-size:.9rem;color:var(--muted)}
+@media (max-width:540px){.card{padding:16px 14px 16px 28px}.card::before{left:13px}}
+@media (prefers-reduced-motion:no-preference){.fb{animation:in .18s ease-out}@keyframes in{from{opacity:.4;transform:translateY(3px)}}}
+</style>
+<style>
+/* ---- Classic plain-web skin ---- */
+html:root:not(#x){
+  --paper:#ffffff; --card:#ffffff; --rule:#cccccc; --ink:#000000; --muted:#444444;
+  --margin:#000000; --accent:#0000cc; --accent-soft:#eeeeff;
+  --good:#006600; --good-soft:#e8f5e8; --bad:#cc0000; --bad-soft:#fdeaea;
+  --line:#999999; --head:#e4e4e4; --cell:#ffffff;
+  --display:"Times New Roman",Times,serif; --body:"Times New Roman",Times,serif;
+  --mono:"Courier New",Courier,monospace; color-scheme:light}
+*,*::before,*::after{border-radius:0!important;background-image:none!important;box-shadow:none!important;text-shadow:none!important;animation:none!important;transition:none!important}
+body{background:#fff!important;color:#000;font:17px/1.45 "Times New Roman",Times,serif!important;padding:16px 16px 40px!important}
+.wrap{max-width:760px!important;gap:14px!important}
+.card::before,.card *::before{display:none!important}
+.card{padding:14px 16px!important;border:1px solid #999!important}
+h1{font:bold 2rem/1.15 "Times New Roman",Times,serif!important;letter-spacing:0!important}
+h1 span{color:inherit!important}
+h2,h3,summary{letter-spacing:0!important}
+.sub{color:#333!important;font-style:italic}
+.eyebrow{letter-spacing:0!important;text-transform:none!important;color:#555!important;font:italic .9rem "Times New Roman",Times,serif!important}
+.prompt strong{background:none!important;color:#000!important;padding:0!important;text-decoration:underline}
+.stats{font-family:Arial,Helvetica,sans-serif!important}
+.stats b{font-family:"Times New Roman",Times,serif!important}
+/* mode tabs as a plain text menu */
+.modes{background:none!important;border:0!important;padding:0!important;gap:0 6px!important}
+.modes button{background:none!important;color:#0000cc!important;text-decoration:underline;font:16px "Times New Roman",Times,serif!important;padding:2px 4px!important;border:0!important}
+.modes button[aria-pressed="true"]{color:#000!important;text-decoration:none;font-weight:bold!important}
+.modes button+button::before{content:"|";color:#999;margin-right:8px;text-decoration:none;display:inline-block}
+/* default-looking form buttons */
+.btn,.stats .reset{font:14px Arial,Helvetica,sans-serif!important;background:#efefef!important;color:#000!important;border:1px solid #767676!important;padding:5px 12px!important;cursor:pointer}
+.btn:hover:not(:disabled),.stats .reset:hover{background:#e2e2e2!important}
+.btn.primary{font-weight:bold!important}
+.btn.ghost{border-style:solid!important;color:#000!important}
+.stats .reset.armed{color:#c00!important;border-color:#c00!important}
+.opt{font:16px "Times New Roman",Times,serif!important;border:1px solid #999!important;padding:10px 12px!important}
+.opt:hover:not(:disabled){border-color:#0000cc!important;background:#f4f4ff}
+select,input,textarea{font-family:Arial,Helvetica,sans-serif!important;border:1px solid #767676!important}
+details{border:1px solid #999!important;background:#fff!important}
+summary{font-weight:bold}
+.hint{border-left:3px solid #0000cc!important}
+.miss{background:#f7f7f7!important;border:1px solid #bbb!important}
+.redo{color:#0000cc!important;text-decoration:underline}
+th{letter-spacing:0!important}
+a{color:#0000cc}
+a:visited{color:#551a8b}
+.backlink{font:16px "Times New Roman",Times,serif;align-self:flex-start}
+.sitefoot{margin-top:18px;font-size:.95rem;color:#333}
+.sitefoot hr{border:0;border-top:1px solid #999;margin:0 0 8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="backlink" href="./">&larr; Back to all drills</a>
+  <header>
+    <div>
+      <h1>ISC <span>Drill</span></h1>
+      <p class="sub">IT general and application controls, SOC reports, security, data and business continuity.</p>
+    </div>
+    <div class="stats" aria-live="polite">
+      <div>Score<b id="sScore">0/0</b></div>
+      <div>Streak<b id="sStreak">0</b></div>
+      <div>Best<b id="sBest">0</b></div>
+      <button class="reset" id="resetStats" type="button">Reset</button>
+    </div>
+  </header>
+
+  <div class="modes" role="group" aria-label="Topic">
+    <button id="mMix" data-mode="mix" aria-pressed="true">Mixed</button>
+    <button id="mitgc" data-mode="itgc" aria-pressed="false">IT controls</button>
+    <button id="msoc" data-mode="soc" aria-pressed="false">SOC engagements</button>
+    <button id="msec" data-mode="sec" aria-pressed="false">Security</button>
+    <button id="mdata" data-mode="data" aria-pressed="false">Data &amp; continuity</button>
+  </div>
+
+  <section class="card" id="card" aria-live="polite"></section>
+
+  <details id="missDet">
+    <summary>Missed questions <span id="missN">(0)</span></summary>
+    <p class="note">Every question you miss or reveal is saved here with its answer. Redo them: a question leaves the list once you get it right.</p>
+    <div class="missbar">
+      <button class="btn primary sm" id="redoBtn" type="button">Redo my misses</button>
+      <span class="spacer"></span>
+      <button class="btn ghost sm" id="clearMiss" type="button">Clear list</button>
+    </div>
+    <div class="misslist" id="missList"></div>
+  </details>
+
+  <details>
+    <summary>ISC reference sheet</summary>
+    <h4>IT general controls</h4>
+    <ul class="refl">
+      <li>Access to programs and data · Program changes · Program development · Computer operations.</li>
+      <li>Application input controls include check digits, limit tests, validity checks, field checks, batch and hash totals, and record counts.</li>
+    </ul>
+    <h4>SOC reports</h4>
+    <ul class="refl">
+      <li>SOC 1: controls relevant to user entities' financial reporting. SOC 2: trust services criteria, for informed users. SOC 3: general use.</li>
+      <li>Type 1: design at a point in time. Type 2: design and operating effectiveness over a period.</li>
+      <li>Carve-out excludes a subservice organization's controls; inclusive includes them.</li>
+    </ul>
+    <h4>Security</h4>
+    <ul class="refl">
+      <li>Confidentiality: encrypt with the recipient's public key. Digital signature: sign with the sender's private key.</li>
+      <li>Factors: something you know, have, or are. Two of the same kind is still one factor.</li>
+    </ul>
+    <h4>Continuity</h4>
+    <ul class="refl">
+      <li>RPO: how much data you can lose. RTO: how long you can be down.</li>
+      <li>Restore with incrementals: full + every incremental since. With differentials: full + the latest differential.</li>
+    </ul>
+  </details>
+
+  <div class="sitefoot"><hr>Accounting Drill Pads &middot; Built by Keith Silverstein &middot; UConn School of Business</div>
+</div>
+
+<script>
+// ---------- Helpers ----------
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const r=(min,max,step)=>Math.round((min+Math.random()*(max-min))/step)*step||step;
+const f=n=>Math.abs(n).toLocaleString("en-US",{maximumFractionDigits:2});
+const $=n=>`<strong>$${f(n)}</strong>`;
+const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const COS=["Harbor Lane Bikes","Northgate Tutoring","Pine Hollow Landscaping","Bluebird Print Shop","Summit Tech Repair","Atlas Moving Co.","Maple Street Dental Lab","Ridgeview Photo Studio","Riverbend Pool Service","Cobalt Coworking","Granite Peak Outfitters","Lumen Software"];
+// fixed-option MC from a scenario bank: each item [scenario, answer, why]
+const bankMC=(label,ask,opts,bank)=>()=>{const c=pick(bank);return{kind:"mc",label,q:`${ask(c[0])}`,ans:c[1],opts:shuffle(opts),w:c[2]}};
+const optsFrom=(pool,ans,n=4)=>shuffle([ans,...shuffle(pool.filter(x=>x!==ans)).slice(0,n-1)]);
+const bankPick=(label,ask,pool,bank,n=4)=>()=>{const c=pick(bank);return{kind:"mc",label,q:ask(c[0]),ans:c[1],opts:optsFrom(pool,c[1],n),w:c[2]}};
+const PEOPLE=["Jordan","Priya","Marcus","Elena","Tyler","Aisha","Ben","Sofia","Noah","Grace"];
+const mc=list=>()=>{const c=pick(list);return{kind:"mc",q:c[0],ans:c[1][0],opts:shuffle(c[1]),w:c[2]}};
+
+// ================= CONTENT =================
+const TOPICS={itgc:"IT controls",soc:"SOC engagements",sec:"Security",data:"Data & continuity"};
+
+// ================= IT CONTROLS =================
+const INPUT=["Check digit","Limit test","Validity check","Field (format) check","Batch control total","Hash total","Record count","Completeness check","Reasonableness check","Sequence check"];
+const ITGC_CAT=["Access to programs and data","Program changes","Program development","Computer operations"];
+const ITGC=[
+ bankPick("Application control",s=>`Which input control is this?<span class="proc">${s}</span>`,INPUT,[
+  ["The system recalculates the last digit of an account number from the other digits and rejects the entry if it doesn't match.","Check digit","A check digit catches transposition and keying errors in ID numbers."],
+  ["Payroll rejects any timesheet reporting more than 80 hours in a week.","Limit test","A limit test flags values above (or below) a set boundary."],
+  ["The system confirms each customer number entered exists in the customer master file.","Validity check","A validity check compares input against a list of acceptable values."],
+  ["The amount field rejects anything containing letters.","Field (format) check","A field check makes sure data is the right type and format."],
+  ["Total dollars of invoices in a batch are added up before and after processing and compared.","Batch control total","A financial total of a meaningful amount checks that nothing was lost or changed."],
+  ["Employee ID numbers in a batch are added up and the meaningless total is compared after processing.","Hash total","A hash total adds a field with no financial meaning just to detect missing or changed records."],
+  ["The number of documents in a batch is compared before and after processing.","Record count","A record count checks that every document was processed."],
+  ["An order can't be submitted until every required field is filled in.","Completeness check","A completeness check makes sure no required data is missing."],
+  ["The system flags a pay rate that's unusual for the employee's job classification.","Reasonableness check","A reasonableness check compares a value to related data to see if it makes sense."],
+  ["The system flags gaps in prenumbered check numbers.","Sequence check","A sequence check finds missing or duplicate documents."],
+ ]),
+ bankPick("General IT control",s=>`Which category of IT general controls does this belong to?<span class="proc">${s}</span>`,ITGC_CAT,[
+  ["Every quarter, managers review who has access to the ERP system and remove terminated employees.","Access to programs and data","User access reviews and timely removal of access are access controls."],
+  ["Developers can't move their own code to production; changes are tested and approved first.","Program changes","Change management controls make sure only authorized, tested changes reach production."],
+  ["A new billing system goes through user acceptance testing before going live.","Program development","Development controls cover building or buying new systems."],
+  ["Nightly batch jobs are scheduled and monitored, and failed backups are investigated.","Computer operations","Job scheduling, backups and problem management are operations controls."],
+  ["Passwords must be at least 14 characters and accounts lock after five failed attempts.","Access to programs and data","Authentication settings control who gets into the system."],
+  ["Emergency fixes are logged and reviewed by IT management the next business day.","Program changes","Emergency changes still need after-the-fact review and approval."],
+ ],4),
+ mc([
+  ["IT general controls matter to the auditor mainly because they…",["Support the continued, reliable operation of application controls","Replace application controls","Only affect the IT department's budget","Are tested only for SOC 2 reports"],"If ITGCs like change management are weak, the auditor can't rely on automated application controls working consistently."],
+  ["Which pair of IT duties should be separated?",["Programming and computer operations","Data entry and proofreading","Help desk and training","Network monitoring and incident logging"],"A programmer who can also run production jobs could make and use unauthorized changes."],
+  ["A preventive control is designed to…",["Stop an error or fraud before it happens","Find an error after it happens","Fix an error after it's found","Measure performance"],"Detective controls find problems after the fact; corrective controls fix them."],
+  ["Which is a detective control?",["A monthly review of exception reports","Requiring two approvals for wire transfers","Locking down access to the server room","A drop-down list limiting input choices"],"The others prevent problems from happening."],
+ ]),
+];
+
+// ================= SOC ENGAGEMENTS =================
+const SOC_OPTS=["SOC 1 Type 2","SOC 1 Type 1","SOC 2 Type 2","SOC 3"];
+const SOC=[
+ bankPick("Which SOC report?",s=>`Which report fits this need?<span class="proc">${s}</span>`,SOC_OPTS,[
+  ["A company's external auditor wants evidence that its payroll processor's controls relevant to financial reporting operated effectively all year.","SOC 1 Type 2","SOC 1 covers controls relevant to user entities' financial reporting. Type 2 tests operating effectiveness over a period."],
+  ["A new customer wants to know whether a cloud provider's security and availability controls worked over the past year, and will sign a nondisclosure agreement for the details.","SOC 2 Type 2","SOC 2 covers the trust services criteria and is meant for informed users like customers under NDA."],
+  ["A cloud provider wants a report it can post on its website showing it meets the trust services criteria.","SOC 3","SOC 3 is a general-use summary without the detailed description of tests."],
+  ["A user auditor needs to understand whether a service organization's financial-reporting controls were suitably designed as of a specific date, with no operating tests.","SOC 1 Type 1","Type 1 covers design and implementation at a point in time only."],
+ ]),
+ mc([
+  ["A Type 2 SOC report differs from a Type 1 because it…",["Tests operating effectiveness over a period of time","Covers only security","Is for general use","Is issued by management instead of an auditor"],"Type 1 addresses design and implementation as of a specific date."],
+  ["Which trust services category is required in every SOC 2 engagement?",["Security","Privacy","Availability","Processing integrity"],"Security is the common criteria. Availability, processing integrity, confidentiality and privacy are added as needed."],
+  ["Complementary user entity controls (CUECs) are…",["Controls the customer must have for the service organization's controls to work as described","Controls the service auditor performs","Controls at a subservice organization","Optional controls the service organization recommends"],"Example: the customer must remove terminated employees' access to the vendor's system."],
+  ["Under the carve-out method, a subservice organization's controls are…",["Excluded from the report's scope, though its services are described","Included and tested","Ignored entirely, with no mention","Tested by the user auditor"],"Under the inclusive method, the subservice organization's controls are included and tested."],
+  ["A bridge (gap) letter covers…",["The period between the end of the SOC report and the user's year-end","Exceptions found during testing","Controls the service organization plans to add","A second service organization"],"It's management's representation that nothing material changed, not auditor assurance."],
+  ["The user auditor relying on a SOC 1 Type 2 report should still…",["Evaluate the report's period, exceptions, and the user entity's complementary controls","Retest every control in the report","Ignore any noted exceptions","Treat it as a substitute for all audit procedures"],"The user auditor is responsible for evaluating whether the report is enough evidence for their purposes."],
+ ]),
+];
+
+// ================= SECURITY =================
+const SEC=[
+ bankPick("Encryption",s=>`Which key should be used?<span class="proc">${s}</span>`,["The recipient's public key","The recipient's private key","The sender's private key","The sender's public key"],[
+  ["Sender encrypts a confidential message so only the recipient can read it.","The recipient's public key","Anyone can encrypt with the public key, but only the recipient's private key can decrypt it."],
+  ["Sender creates a digital signature proving the message came from them.","The sender's private key","Only the sender has the private key. Anyone can verify the signature with the sender's public key."],
+  ["Recipient decrypts a confidential message sent to them.","The recipient's private key","The private key pairs with the public key used to encrypt."],
+  ["Recipient verifies who signed a message.","The sender's public key","The signature made with the sender's private key checks out against the sender's public key."],
+ ]),
+ bankPick("Authentication",s=>`How many authentication factors does this use?<span class="proc">${s}</span>`,["One factor","Two factors","Three factors"],[
+  ["A password and a security question.","One factor","Both are something you know."],
+  ["A password and a code from an authenticator app on your phone.","Two factors","Something you know and something you have."],
+  ["A badge and a fingerprint scan.","Two factors","Something you have and something you are."],
+  ["A PIN, a smart card and a face scan.","Three factors","Know, have and are."],
+ ],3),
+ mc([
+  ["Hashing is mainly used to…",["Verify that data hasn't been altered","Encrypt data so it can be decrypted later","Compress large files","Speed up network traffic"],"A hash is one-way: any change to the data changes the hash."],
+  ["The principle of least privilege means users get…",["Only the access needed to do their job","Administrator rights by default","Access to everything in their department","Temporary access only"],"It limits the damage from mistakes, compromised accounts and insiders."],
+  ["An email that appears to come from the CFO asking an employee to wire funds urgently is an example of…",["Phishing (business email compromise)","Ransomware","A denial-of-service attack","A SQL injection"],"Verifying through a separate channel, like a phone call to a known number, is the key control."],
+  ["Ransomware is best mitigated by…",["Regular offline or immutable backups and patching","Longer passwords alone","Faster internet connections","Disabling firewalls"],"Backups the attacker can't reach let the company restore without paying."],
+  ["A firewall primarily…",["Filters network traffic based on security rules","Encrypts stored data","Backs up data offsite","Authenticates users with biometrics"],"Intrusion detection systems monitor for attacks; firewalls block traffic that breaks the rules."],
+  ["A vulnerability scan differs from a penetration test because it…",["Identifies known weaknesses without trying to exploit them","Actively exploits weaknesses","Is performed only by outside attackers","Tests physical security"],"Penetration testing simulates a real attack."],
+ ]),
+];
+
+// ================= DATA & CONTINUITY =================
+const DAYS=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+const DATA=[
+ ()=>{const typ=pick(["incremental","differential"]),k=1+Math.floor(Math.random()*6),day=DAYS[k-1];const n=typ==="incremental"?1+k:2;
+   return{kind:"num",unit:"",tol:0,hint:"Enter the number of backup sets.",t:`A company runs a full backup every Sunday night and ${typ} backups every other night. The server fails on ${DAYS[k]||"Sunday"} morning, before that night's backup, after ${day} night's backup ran. How many backup sets are needed to restore the data?`,ans:n,
+   rows:typ==="incremental"?[["Sunday full backup","1"],[`Incrementals Monday through ${day}`,String(k)],["Total sets",String(n),"tot"]]:[["Sunday full backup","1"],[`${day}'s differential (all changes since Sunday)`,"1"],["Total sets","2","tot"]],
+   w:typ==="incremental"?"Each incremental holds only changes since the previous backup of any kind, so every one since the full backup is needed. Incrementals are fast to make but slow to restore.":"A differential holds all changes since the last full backup, so only the full and the latest differential are needed. Differentials grow during the week but restore faster."}},
+ bankPick("Continuity",s=>`Which term matches this?<span class="proc">${s}</span>`,["Recovery point objective (RPO)","Recovery time objective (RTO)","Hot site","Cold site","Warm site"],[
+  ["The maximum amount of data, measured in time, the business can afford to lose.","Recovery point objective (RPO)","RPO drives how often backups must run."],
+  ["The maximum time systems can be down before the business is seriously harmed.","Recovery time objective (RTO)","RTO drives how fast recovery must be, and what kind of site is needed."],
+  ["A fully equipped backup facility with current data that can take over almost immediately.","Hot site","Hot sites are the fastest and most expensive."],
+  ["A facility with space, power and connectivity, but no equipment installed.","Cold site","Cold sites are cheap but can take weeks to bring up."],
+  ["A facility with some equipment ready, but data must be restored before it can run.","Warm site","A middle ground between hot and cold."],
+ ]),
+ mc([
+  ["In a relational database, a foreign key…",["Links a record to the primary key of another table","Uniquely identifies each record in its own table","Encrypts sensitive fields","Is required in every table"],"A primary key uniquely identifies each row; foreign keys create the relationships between tables."],
+  ["Normalizing a database mainly…",["Reduces redundant data and update anomalies","Speeds up every query","Encrypts the data","Removes the need for keys"],"Normalized tables store each fact once."],
+  ["ETL stands for…",["Extract, transform, load","Encrypt, transfer, log","Evaluate, test, launch","Export, track, link"],"It's the process of pulling data from sources, cleaning it, and loading it into a data warehouse."],
+  ["In the systems development life cycle, user acceptance testing happens…",["Before the system goes live","After the system is retired","During initial planning","Only when problems arise"],"Users confirm the system meets requirements before implementation."],
+  ["Data minimization means an organization should…",["Collect and keep only the personal data it needs for a stated purpose","Store data in the smallest file format","Delete all data after one year","Limit how many people use the database"],"It's a core privacy principle in frameworks like GDPR."],
+  ["Which conversion approach runs the old and new systems at the same time?",["Parallel","Direct (cutover)","Pilot","Phased"],"Parallel conversion is the safest and the most costly."],
+ ]),
+];
+const GEN={itgc:ITGC,soc:SOC,sec:SEC,data:DATA};
+// ================= END CONTENT =================
+
+// ---------- State ----------
+const store={get(){try{return JSON.parse(localStorage.getItem("iscDrill")||"{}")}catch(e){return{}}},set(v){try{localStorage.setItem("iscDrill",JSON.stringify(v))}catch(e){}}};
+const saved=store.get();
+let S={right:0,total:0,streak:0,best:saved.best||0,life:+saved.life||0,lifeOk:+saved.lifeOk||0,mode:(GEN[saved.mode]||saved.mode==="mix")?saved.mode:"mix"};
+let cur=null,done=false;
+let missed=Array.isArray(saved.missed)?saved.missed:[];
+let redoQ=null;
+const card=document.getElementById("card");
+const persist=()=>store.set({best:S.best,life:S.life,lifeOk:S.lifeOk,mode:S.mode,missed});
+function updStats(){sScore.textContent=`${S.right}/${S.total}`;sStreak.textContent=S.streak;sBest.textContent=S.best}
+function record(ok){S.life++;if(ok)S.lifeOk++;S.total++;if(ok){S.right++;S.streak++;S.best=Math.max(S.best,S.streak)}else S.streak=0;
+  if(!ok&&!cur._mid){missed.push({id:Date.now()+"-"+Math.random().toString(36).slice(2,7),at:new Date().toLocaleDateString("en-US",{month:"short",day:"numeric"}),q:JSON.parse(JSON.stringify(cur))});if(missed.length>150)missed=missed.slice(-150)}
+  if(ok&&cur._mid)missed=missed.filter(m=>m.id!==cur._mid);
+  persist();updStats();renderMissed()}
+const redoTag=()=>cur._mid?`<span class="redo">Redo · ${redoQ?redoQ.length:0} left after this</span>`:"";
+const eyebrow=label=>`<div class="eyebrow"><span class="topic">${TOPICS[cur.topic]}</span><span>${label}</span>${redoTag()}</div>`;
+
+function next(){
+  done=false;
+  if(redoQ){
+    let m=null;while(redoQ.length&&!m){const id=redoQ.shift();m=missed.find(x=>x.id===id)}
+    if(!m){redoQ=null;updRedoBtn();
+      card.innerHTML=`<div class="eyebrow"><span>Redo finished</span></div><p class="prompt">${missed.length?`You've been through every miss. ${missed.length} still on the list: the ones you got wrong again.`:"Every missed question is cleared."}</p><div class="actions"><span class="spacer"></span><button class="btn primary" id="go" type="button">Back to practice →</button></div>`;
+      go.onclick=next;go.focus();return}
+    cur={...m.q,_mid:m.id};display();return;
+  }
+  const topic=S.mode==="mix"?pick(Object.keys(GEN)):S.mode;
+  cur={topic,...pick(GEN[topic])(pick(COS))};
+  display();
+}
+function display(){if(cur.kind==="num")renderNum();else renderMC()}
+
+// ---------- Missed list ----------
+const fmtAns=q=>(q.ans<0?"−":"")+(q.unit==="$"?`$${f(q.ans)}`:q.unit==="%"?`${f(q.ans)}%`:f(q.ans));
+const workTable=rows=>`<div class="tw"><table class="journal"><tbody>${rows.map(([lb,n,c])=>`<tr class="${c||""}"><td>${lb}</td><td class="n">${n}</td></tr>`).join("")}</tbody></table></div>`;
+function answerHTML(q){return q.kind==="num"?`<div><b>Answer:</b> ${fmtAns(q)}</div>${workTable(q.rows)}`:`<div><b>Answer:</b> ${q.ans}</div>`}
+function renderMissed(){
+  missN.textContent=`(${missed.length})`;
+  const list=[...missed].reverse().slice(0,60);
+  missList.innerHTML=missed.length?list.map(m=>`<div class="miss"><div class="when">${m.at} · ${TOPICS[m.q.topic]} · ${m.q.label||(m.q.kind==="num"?"Calculation":"Concept check")}</div><div class="mq">${m.q.q||m.q.t}</div>${answerHTML(m.q)}<p>${m.q.w}</p></div>`).join("")+(missed.length>60?`<p class="note">Showing the 60 most recent of ${missed.length}.</p>`:"")
+    :`<p class="note">Nothing here yet. Questions you miss will show up here.</p>`;
+  updRedoBtn();
+}
+function updRedoBtn(){redoBtn.textContent=redoQ?"Stop redo":`Redo my misses${missed.length?` (${missed.length})`:""}`;redoBtn.disabled=!redoQ&&!missed.length}
+redoBtn.onclick=()=>{if(redoQ){redoQ=null;updRedoBtn();next();return}redoQ=shuffle(missed.map(m=>m.id));updRedoBtn();next();card.scrollIntoView({block:"start",behavior:"smooth"})};
+function armed(btn,label,armedLabel,action){let on=false,t;btn.onclick=()=>{if(!on){on=true;btn.textContent=armedLabel;btn.classList.add("armed");t=setTimeout(()=>{on=false;btn.textContent=label;btn.classList.remove("armed")},4000);return}
+  clearTimeout(t);on=false;btn.textContent=label;btn.classList.remove("armed");action()}}
+armed(clearMiss,"Clear list","Click again to clear",()=>{missed=[];redoQ=null;persist();renderMissed()});
+armed(resetStats,"Reset","Click again",()=>{S.right=0;S.total=0;S.streak=0;S.best=0;persist();updStats()});
+
+// ---------- Numeric ----------
+const parse=v=>{let s=String(v).trim(),neg=/^\(.*\)$/.test(s)||/^[-−]/.test(s);const n=parseFloat(s.replace(/[$,%\s()−-]/g,""));return isFinite(n)?(neg?-1:1)*n:NaN};
+function renderNum(){
+  const pre=cur.unit==="$"?"$":"",post=cur.unit==="%"?"%":"";
+  card.innerHTML=`${eyebrow("Calculation")}<div class="prompt">${cur.t}</div>
+  <label class="numin" id="nwrap">${pre?`<span>${pre}</span>`:""}<input id="num" inputmode="decimal" placeholder="0" aria-label="Your answer">${post?`<span>${post}</span>`:""}</label>
+  <p class="note" style="margin:6px 0 0">${cur.hint?cur.hint:cur.unit==="%"?"Enter a percent, e.g. 12.5. Two decimals is plenty.":cur.unit==="$"?"Round to the nearest dollar.":"Enter a whole number."}</p>
+  <div class="actions"><span class="spacer"></span><button class="btn" id="show" type="button">Show answer</button><button class="btn primary" id="go" type="button">Check</button></div><div id="out"></div>`;
+  const fin=revealed=>{
+    const v=parse(num.value);
+    if(!revealed&&!isFinite(v)){out.innerHTML=`<div class="fb"><p class="note">Enter a number.</p></div>`;return}
+    done=true;const ok=!revealed&&Math.abs(v-cur.ans)<=(cur.tol||.5);record(ok);num.disabled=true;
+    if(!revealed)nwrap.classList.add(ok?"ok":"no");
+    out.innerHTML=`<div class="fb ${revealed?"":ok?"good":"bad"}"><h3>${revealed?"Here's the answer":ok?"Correct":`Not quite. The answer is ${fmtAns(cur)}`}</h3>${workTable(cur.rows)}<p>${cur.w}</p></div>`;
+    show.hidden=true;go.textContent="Next question →";go.focus();
+  };
+  num.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();done?next():fin(false)}};
+  go.onclick=()=>done?next():fin(false);
+  show.onclick=()=>{if(!done)fin(true)};
+}
+
+// ---------- Multiple choice ----------
+function renderMC(){
+  card.innerHTML=`${eyebrow(cur.label||"Concept check")}<div class="prompt">${cur.q}</div>
+  <div class="opts">${cur.opts.map(o=>`<button class="opt" type="button">${o}</button>`).join("")}</div>
+  <div id="out"></div><div class="actions"><span class="spacer"></span><button class="btn primary" id="go" type="button" hidden>Next question →</button></div>`;
+  card.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{
+    if(done)return;done=true;const ok=b.textContent===cur.ans;record(ok);
+    card.querySelectorAll(".opt").forEach(x=>{x.disabled=true;if(x.textContent===cur.ans)x.classList.add("ok")});
+    if(!ok)b.classList.add("no");
+    out.innerHTML=`<div class="fb ${ok?"good":"bad"}"><h3>${ok?"Correct":"Not quite"}</h3><p>${cur.w}</p></div>`;
+    go.hidden=false;go.onclick=next;go.focus();
+  });
+}
+
+// ---------- Modes ----------
+document.querySelectorAll(".modes button").forEach(b=>{
+  b.setAttribute("aria-pressed",b.dataset.mode===S.mode);
+  b.onclick=()=>{S.mode=b.dataset.mode;redoQ=null;persist();updRedoBtn();
+    document.querySelectorAll(".modes button").forEach(x=>x.setAttribute("aria-pressed",x===b));next()};
+});
+updStats();renderMissed();next();
+</script>
+</body>
+</html>

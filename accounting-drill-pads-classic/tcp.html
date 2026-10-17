@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TCP Drill</title>
+<style>
+[hidden]{display:none!important}
+body{margin:0}
+/* Layout: eighth pad in the series; raspberry accent marks this as the TCP pad. Same ruled card and red margin line as the other pads */
+:root{
+  --paper:#f3f2ec; --card:#fcfbf7; --rule:#e2dfd3; --ink:#24221b; --muted:#66624f;
+  --margin:#c4473a; --accent:#a8306a; --accent-soft:#f7e1ea;
+  --good:#2c7a4c; --good-soft:#e2f2e8; --bad:#b3382c; --bad-soft:#f8e4e1;
+  --line:#d3cfbf;
+  --display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --body:"Public Sans",ui-sans-serif,system-ui,-apple-system,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#151410; --card:#1e1c17; --rule:#2c2a22; --ink:#ebe8dd; --muted:#a5a08c;
+  --margin:#d46a5d; --accent:#f29ac4; --accent-soft:#3d1d2c;
+  --good:#6cc894; --good-soft:#1c3327; --bad:#ec8276; --bad-soft:#3a201d; --line:#38352b; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#151410; --card:#1e1c17; --rule:#2c2a22; --ink:#ebe8dd; --muted:#a5a08c;
+  --margin:#d46a5d; --accent:#f29ac4; --accent-soft:#3d1d2c;
+  --good:#6cc894; --good-soft:#1c3327; --bad:#ec8276; --bad-soft:#3a201d; --line:#38352b; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+.wrap{max-width:740px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.back{align-self:flex-start;font:600 .78rem var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-decoration:none;border:1px dashed var(--line);border-radius:6px;padding:4px 9px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
+h1{font-family:var(--display);font-weight:800;font-size:2rem;line-height:1;margin:0;letter-spacing:-.02em}
+h1 span{color:var(--accent)}
+.sub{margin:4px 0 0;color:var(--muted);font-size:.9rem;max-width:46ch}
+.stats{display:flex;gap:14px;font-family:var(--mono);font-size:.82rem;color:var(--muted)}
+.stats b{display:block;font-size:1.15rem;color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+.stats .reset{align-self:flex-end;font:600 .72rem var(--mono);color:var(--muted);background:transparent;border:1px dashed var(--line);border-radius:6px;padding:4px 8px;cursor:pointer}
+.stats .reset.armed{color:var(--bad);border-color:var(--bad)}
+
+.modes{display:flex;gap:4px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:4px;width:fit-content;max-width:100%;flex-wrap:wrap}
+.modes button{font:600 .85rem var(--body);border:0;background:transparent;color:var(--muted);padding:7px 12px;border-radius:7px;cursor:pointer}
+.modes button[aria-pressed="true"]{background:var(--accent);color:var(--card)}
+button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.card{position:relative;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px 20px 20px 34px;
+  background-image:repeating-linear-gradient(to bottom,transparent 0,transparent 31px,var(--rule) 31px,var(--rule) 32px);background-position:0 14px}
+.card::before{content:"";position:absolute;left:18px;top:0;bottom:0;width:2px;background:var(--margin);opacity:.55}
+.eyebrow{font:600 .72rem var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--margin);display:flex;gap:10px;flex-wrap:wrap}
+.eyebrow .topic{color:var(--accent)}
+.redo{color:var(--accent)!important}
+.prompt{font-size:1.06rem;font-weight:500;margin:8px 0 16px;max-width:64ch;text-wrap:pretty}
+.prompt strong{font-family:var(--mono);font-weight:600;background:var(--accent-soft);color:var(--accent);padding:0 4px;border-radius:4px;white-space:nowrap}
+.prompt ul{margin:8px 0 0;padding-left:20px}
+.prompt li{margin:2px 0}
+.prompt .proc{display:block;margin-top:8px;padding:8px 12px;border-left:3px solid var(--accent);background:var(--accent-soft);border-radius:0 8px 8px 0;font-weight:500}
+.tw{overflow-x:auto}
+
+.numin{display:flex;align-items:center;gap:8px;max-width:240px}
+.numin span{font:600 1.1rem var(--mono);color:var(--muted)}
+.numin input{width:100%;font:500 .95rem var(--mono);text-align:right;font-variant-numeric:tabular-nums;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:9px 10px;min-width:0}
+.numin.ok input{border-color:var(--good);background:var(--good-soft)}
+.numin.no input{border-color:var(--bad);background:var(--bad-soft)}
+
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.btn{font:600 .92rem var(--body);border-radius:9px;padding:10px 16px;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--card)}
+.btn.ghost{border-style:dashed;color:var(--muted)}
+.btn.sm{padding:6px 12px;font-size:.85rem}
+.btn:disabled{opacity:.5;cursor:default}
+.spacer{flex:1}
+
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px}
+.opt{font:600 .95rem var(--body);padding:12px 14px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;text-align:left}
+.opt:hover:not(:disabled){border-color:var(--accent)}
+.opt.ok{background:var(--good-soft);border-color:var(--good);color:var(--good)}
+.opt.no{background:var(--bad-soft);border-color:var(--bad);color:var(--bad)}
+.opt:disabled{cursor:default}
+
+.fb{margin-top:16px;padding:14px 16px;border-radius:10px;border:1px solid var(--line);background:var(--card)}
+.fb.good{border-color:var(--good)}.fb.bad{border-color:var(--bad)}
+.fb h3{margin:0 0 8px;font:800 1.1rem var(--display)}
+.fb.good h3{color:var(--good)}.fb.bad h3{color:var(--bad)}
+.fb p{margin:8px 0 0;max-width:64ch}
+.journal{width:100%;border-collapse:collapse;font-size:.92rem;min-width:300px}
+.journal td{padding:5px 6px;border-bottom:1px solid var(--rule)}
+.journal td.n{font-family:var(--mono);text-align:right;width:130px;font-variant-numeric:tabular-nums}
+.journal tr.tot td{font-weight:700;border-top:2px solid var(--ink)}
+.note{color:var(--muted);font-size:.88rem}
+
+details{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 16px}
+summary{cursor:pointer;font-weight:700}
+details h4{font:800 1rem var(--display);margin:16px 0 4px;color:var(--accent)}
+.refl{margin:4px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:4px;font-size:.92rem}
+.rules{width:100%;border-collapse:collapse;margin-top:8px;font-size:.9rem;min-width:460px}
+.rules th,.rules td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--rule);vertical-align:top}
+.rules th{font:600 .72rem var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.missbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
+.misslist{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+.miss{border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:var(--paper)}
+.miss .when{font:600 .7rem var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.miss .mq{margin:4px 0 8px;font-weight:500}
+.miss .mq strong{font-family:var(--mono)}
+.miss .mq ul{margin:6px 0 0;padding-left:20px}
+.miss p{margin:6px 0 0;font-size:.9rem;color:var(--muted)}
+@media (max-width:540px){.card{padding:16px 14px 16px 28px}.card::before{left:13px}}
+@media (prefers-reduced-motion:no-preference){.fb{animation:in .18s ease-out}@keyframes in{from{opacity:.4;transform:translateY(3px)}}}
+</style>
+<style>
+/* ---- Classic plain-web skin ---- */
+html:root:not(#x){
+  --paper:#ffffff; --card:#ffffff; --rule:#cccccc; --ink:#000000; --muted:#444444;
+  --margin:#000000; --accent:#0000cc; --accent-soft:#eeeeff;
+  --good:#006600; --good-soft:#e8f5e8; --bad:#cc0000; --bad-soft:#fdeaea;
+  --line:#999999; --head:#e4e4e4; --cell:#ffffff;
+  --display:"Times New Roman",Times,serif; --body:"Times New Roman",Times,serif;
+  --mono:"Courier New",Courier,monospace; color-scheme:light}
+*,*::before,*::after{border-radius:0!important;background-image:none!important;box-shadow:none!important;text-shadow:none!important;animation:none!important;transition:none!important}
+body{background:#fff!important;color:#000;font:17px/1.45 "Times New Roman",Times,serif!important;padding:16px 16px 40px!important}
+.wrap{max-width:760px!important;gap:14px!important}
+.card::before,.card *::before{display:none!important}
+.card{padding:14px 16px!important;border:1px solid #999!important}
+h1{font:bold 2rem/1.15 "Times New Roman",Times,serif!important;letter-spacing:0!important}
+h1 span{color:inherit!important}
+h2,h3,summary{letter-spacing:0!important}
+.sub{color:#333!important;font-style:italic}
+.eyebrow{letter-spacing:0!important;text-transform:none!important;color:#555!important;font:italic .9rem "Times New Roman",Times,serif!important}
+.prompt strong{background:none!important;color:#000!important;padding:0!important;text-decoration:underline}
+.stats{font-family:Arial,Helvetica,sans-serif!important}
+.stats b{font-family:"Times New Roman",Times,serif!important}
+/* mode tabs as a plain text menu */
+.modes{background:none!important;border:0!important;padding:0!important;gap:0 6px!important}
+.modes button{background:none!important;color:#0000cc!important;text-decoration:underline;font:16px "Times New Roman",Times,serif!important;padding:2px 4px!important;border:0!important}
+.modes button[aria-pressed="true"]{color:#000!important;text-decoration:none;font-weight:bold!important}
+.modes button+button::before{content:"|";color:#999;margin-right:8px;text-decoration:none;display:inline-block}
+/* default-looking form buttons */
+.btn,.stats .reset{font:14px Arial,Helvetica,sans-serif!important;background:#efefef!important;color:#000!important;border:1px solid #767676!important;padding:5px 12px!important;cursor:pointer}
+.btn:hover:not(:disabled),.stats .reset:hover{background:#e2e2e2!important}
+.btn.primary{font-weight:bold!important}
+.btn.ghost{border-style:solid!important;color:#000!important}
+.stats .reset.armed{color:#c00!important;border-color:#c00!important}
+.opt{font:16px "Times New Roman",Times,serif!important;border:1px solid #999!important;padding:10px 12px!important}
+.opt:hover:not(:disabled){border-color:#0000cc!important;background:#f4f4ff}
+select,input,textarea{font-family:Arial,Helvetica,sans-serif!important;border:1px solid #767676!important}
+details{border:1px solid #999!important;background:#fff!important}
+summary{font-weight:bold}
+.hint{border-left:3px solid #0000cc!important}
+.miss{background:#f7f7f7!important;border:1px solid #bbb!important}
+.redo{color:#0000cc!important;text-decoration:underline}
+th{letter-spacing:0!important}
+a{color:#0000cc}
+a:visited{color:#551a8b}
+.backlink{font:16px "Times New Roman",Times,serif;align-self:flex-start}
+.sitefoot{margin-top:18px;font-size:.95rem;color:#333}
+.sitefoot hr{border:0;border-top:1px solid #999;margin:0 0 8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="backlink" href="./">&larr; Back to all drills</a>
+  <header>
+    <div>
+      <h1>TCP <span>Drill</span></h1>
+      <p class="sub">Entity taxation, partnerships and S corporations, gifts and estates, and individual tax planning.</p>
+    </div>
+    <div class="stats" aria-live="polite">
+      <div>Score<b id="sScore">0/0</b></div>
+      <div>Streak<b id="sStreak">0</b></div>
+      <div>Best<b id="sBest">0</b></div>
+      <button class="reset" id="resetStats" type="button">Reset</button>
+    </div>
+  </header>
+
+  <div class="modes" role="group" aria-label="Topic">
+    <button id="mMix" data-mode="mix" aria-pressed="true">Mixed</button>
+    <button id="ment" data-mode="ent" aria-pressed="false">Entity taxation</button>
+    <button id="mpass" data-mode="pass" aria-pressed="false">Partnerships &amp; S corps</button>
+    <button id="mgift" data-mode="gift" aria-pressed="false">Gifts &amp; estates</button>
+    <button id="mplan" data-mode="plan" aria-pressed="false">Individual planning</button>
+  </div>
+
+  <section class="card" id="card" aria-live="polite"></section>
+
+  <details id="missDet">
+    <summary>Missed questions <span id="missN">(0)</span></summary>
+    <p class="note">Every question you miss or reveal is saved here with its answer. Redo them: a question leaves the list once you get it right.</p>
+    <div class="missbar">
+      <button class="btn primary sm" id="redoBtn" type="button">Redo my misses</button>
+      <span class="spacer"></span>
+      <button class="btn ghost sm" id="clearMiss" type="button">Clear list</button>
+    </div>
+    <div class="misslist" id="missList"></div>
+  </details>
+
+  <details>
+    <summary>TCP reference sheet</summary>
+    <h4>C corporations</h4>
+    <ul class="refl">
+      <li>Flat 21% rate. Dividends received deduction: 50% (under 20% owned), 65% (20% to under 80%), 100% (80%+).</li>
+      <li>Schedule M-1 starts from book income: add back federal tax, fines and 50% of meals; subtract tax-exempt interest.</li>
+      <li>Section 351: no gain if transferors control 80%+ after the exchange, except to the extent of boot.</li>
+    </ul>
+    <h4>Partnerships and S corps</h4>
+    <ul class="refl">
+      <li>Partner basis: cash + adjusted basis of property − liabilities relieved + share of partnership liabilities.</li>
+      <li>Basis order each year: increases, then distributions, then losses. Losses beyond basis are suspended.</li>
+      <li>S corporation: up to 100 shareholders, one class of stock, no corporate, partnership or nonresident alien shareholders. No basis for entity debt.</li>
+    </ul>
+    <h4>Gifts and estates</h4>
+    <ul class="refl">
+      <li>Each recipient gets an annual exclusion. Tuition and medical paid directly, gifts to a citizen spouse and gifts to charity are excluded or deducted.</li>
+      <li>Gross estate: everything owned at death, revocable trusts, life insurance owned or transferred within 3 years, half of spousal joint tenancy.</li>
+    </ul>
+    <h4>Individual planning</h4>
+    <ul class="refl">
+      <li>Net investment income tax: 3.8% of the lesser of NII or MAGI over $200,000 single / $250,000 joint.</li>
+      <li>Active rental participants: up to $25,000 of losses, phased out by 50% of MAGI over $100,000.</li>
+    </ul>
+    <p class="note">Inflation-indexed amounts, like the annual gift exclusion, are given in the question.</p>
+  </details>
+
+  <div class="sitefoot"><hr>Accounting Drill Pads &middot; Built by Keith Silverstein &middot; UConn School of Business</div>
+</div>
+
+<script>
+// ---------- Helpers ----------
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const r=(min,max,step)=>Math.round((min+Math.random()*(max-min))/step)*step||step;
+const f=n=>Math.abs(n).toLocaleString("en-US",{maximumFractionDigits:2});
+const $=n=>`<strong>$${f(n)}</strong>`;
+const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const COS=["Harbor Lane Bikes","Northgate Tutoring","Pine Hollow Landscaping","Bluebird Print Shop","Summit Tech Repair","Atlas Moving Co.","Maple Street Dental Lab","Ridgeview Photo Studio","Riverbend Pool Service","Cobalt Coworking","Granite Peak Outfitters","Lumen Software"];
+// fixed-option MC from a scenario bank: each item [scenario, answer, why]
+const bankMC=(label,ask,opts,bank)=>()=>{const c=pick(bank);return{kind:"mc",label,q:`${ask(c[0])}`,ans:c[1],opts:shuffle(opts),w:c[2]}};
+const optsFrom=(pool,ans,n=4)=>shuffle([ans,...shuffle(pool.filter(x=>x!==ans)).slice(0,n-1)]);
+const bankPick=(label,ask,pool,bank,n=4)=>()=>{const c=pick(bank);return{kind:"mc",label,q:ask(c[0]),ans:c[1],opts:optsFrom(pool,c[1],n),w:c[2]}};
+const PEOPLE=["Jordan","Priya","Marcus","Elena","Tyler","Aisha","Ben","Sofia","Noah","Grace"];
+const mc=list=>()=>{const c=pick(list);return{kind:"mc",q:c[0],ans:c[1][0],opts:shuffle(c[1]),w:c[2]}};
+
+// ================= CONTENT =================
+const TOPICS={ent:"Entity taxation",pass:"Partnerships & S corps",gift:"Gifts & estates",plan:"Individual planning"};
+
+// ================= ENTITY TAXATION =================
+const ENT=[
+ co=>{const pct=pick([10,15,25,40,60,85,100]),rate=pct<20?50:pct<80?65:100,d=r(10000,400000,5000),drd=Math.round(d*rate/100);
+   return{kind:"num",unit:"$",tol:1,t:`${co}, a C corporation, receives ${$(d)} of dividends from a domestic corporation in which it owns <strong>${pct}%</strong> of the stock. Ignoring any taxable income limitation, what is the dividends received deduction?`,ans:drd,
+   rows:[[`Ownership ${pct}% → deduction rate`,`${rate}%`],[`$${f(d)} × ${rate}%`,`$${f(drd)}`,"tot"]],
+   w:"The DRD is 50% for less than 20% ownership, 65% for 20% to under 80%, and 100% for 80% or more (affiliated group). It reduces the triple taxation of corporate earnings."}},
+ co=>{const ni=r(200000,2000000,5000),tx=r(Math.round(ni*.15/1000)*1000,Math.round(ni*.28/1000)*1000,1000),muni=r(2000,40000,500),fine=r(1000,25000,500),meals=r(2000,30000,1000)*2,ti=ni+tx-muni+fine+meals/2;
+   return{kind:"num",unit:"$",tol:1,t:`${co}, a C corporation, reports book net income of ${$(ni)}. Its records show:<ul><li>Federal income tax expense: ${$(tx)}</li><li>Interest earned on municipal bonds: ${$(muni)}</li><li>Fines paid to a state agency: ${$(fine)}</li><li>Business meals with clients: ${$(meals)}</li></ul>What is taxable income?`,ans:ti,
+   rows:[["Book net income",`$${f(ni)}`],["Add: federal income tax expense",`$${f(tx)}`],["Less: municipal bond interest",`($${f(muni)})`],["Add: fines and penalties",`$${f(fine)}`],["Add: nondeductible 50% of meals",`$${f(meals/2)}`],["Taxable income",`$${f(ti)}`,"tot"]],
+   w:"This is the Schedule M-1 reconciliation. Federal income tax isn't deductible, municipal interest isn't taxable, fines aren't deductible, and only 50% of business meals is deductible."}},
+ ()=>{const p=pick(PEOPLE),ab=r(20000,300000,5000),fmv=r(ab+10000,ab*3,5000),boot=Math.random()<.5?0:r(5000,Math.min(60000,Math.round((fmv-ab)/5000)*5000+5000),5000),real=fmv-ab,rec=Math.min(real,boot),sb=ab+rec-boot,ask=pick(["rec","sb"]);
+   return{kind:"num",unit:"$",tol:1,hint:"Enter 0 if none.",t:`${p} transfers property with an adjusted basis of ${$(ab)} and fair market value of ${$(fmv)} to a newly formed corporation in exchange for 100% of its stock${boot?` and ${$(boot)} in cash`:""}. What is ${ask==="rec"?"<em>the gain "+p+" recognizes</em>":"<em>"+p+"'s basis in the stock</em>"}?`,ans:ask==="rec"?rec:sb,
+   rows:[["Realized gain (FMV − basis)",`$${f(real)}`],["Recognized gain (lesser of realized gain or boot)",`$${f(rec)}`,ask==="rec"?"tot":""],["Stock basis: property basis + gain recognized − boot",`$${f(sb)}`,ask==="sb"?"tot":""]],
+   w:`Section 351 defers gain when transferors own at least 80% of the corporation right after the exchange. Gain is recognized only to the extent of boot received, and the deferred gain stays in the stock's basis.`}},
+ bankPick("S corporation eligibility",s=>`Can this corporation be an S corporation?<span class="proc">${s}</span>`,["Yes","No"],[
+  ["It has 85 shareholders, all US citizens.","Yes","The limit is 100 shareholders, and family members can count as one."],
+  ["One of its shareholders is a C corporation.","No","Corporations and partnerships can't be S corporation shareholders."],
+  ["It has common stock with different voting rights but identical distribution rights.","Yes","Only one class of stock is allowed, but differences in voting rights alone don't create a second class."],
+  ["It has issued preferred stock with a priority on dividends.","No","Different distribution rights make a second class of stock."],
+  ["One shareholder is a nonresident alien.","No","Nonresident aliens can't be shareholders."],
+  ["An estate of a deceased shareholder holds some shares.","Yes","Estates, certain trusts and tax-exempt organizations can be shareholders."],
+ ],2),
+ mc([
+  ["The federal income tax rate for a C corporation is…",["A flat 21%","Graduated from 15% to 35%","The same as the owner's individual rate","Zero, since income passes through"],"Since 2018 the corporate rate is a flat 21%, including personal service corporations."],
+  ["A C corporation's net capital loss can be…",["Carried back 3 years and forward 5 years, against capital gains only","Deducted against ordinary income up to $3,000","Carried forward indefinitely against ordinary income","Passed through to shareholders"],"Corporations can only use capital losses against capital gains. Individuals get the $3,000 ordinary offset instead."],
+  ["A C corporation's charitable contribution deduction is generally limited to…",["10% of taxable income, before certain deductions","60% of taxable income","Its book net income","No limit"],"Excess contributions carry forward 5 years."],
+  ["Double taxation of a C corporation means its earnings are taxed…",["At the corporate level and again when distributed as dividends","Federally and by the state","Twice if it operates in two states","Only when distributed"],"Pass-through entities avoid this because they're not taxed at the entity level."],
+  ["By default, an LLC with two or more members is taxed as…",["A partnership","A C corporation","An S corporation","A disregarded entity"],"A single-member LLC defaults to a disregarded entity. Either can elect corporate treatment."],
+ ]),
+];
+
+// ================= PARTNERSHIPS & S CORPS =================
+const PASS=[
+ ()=>{const p=pick(PEOPLE),pc=pick([20,25,40,50]),cash=r(0,50000,5000),ab=r(30000,200000,5000),fmv=r(ab,ab*2,5000),L=r(0,Math.round((ab+cash)*.8/5000)*5000,5000),b=cash+ab-L+Math.round(L*pc/100);
+   return{kind:"num",unit:"$",tol:1,t:`${p} contributes ${cash?`${$(cash)} cash and `:""}a building with an adjusted basis of ${$(ab)} and fair market value of ${$(fmv)} to a new partnership for a <strong>${pc}%</strong> interest. ${L?`The partnership assumes the building's ${$(L)} mortgage, which is shared by the partners in proportion to their interests.`:"The building has no debt."} What is ${p}'s basis in the partnership interest?`,ans:b,
+   rows:[["Cash contributed",`$${f(cash)}`],["Adjusted basis of property contributed",`$${f(ab)}`],["Less: liability assumed by the partnership",`($${f(L)})`],[`Add: ${p}'s ${pc}% share of that liability`,`$${f(Math.round(L*pc/100))}`],["Outside basis",`$${f(b)}`,"tot"]],
+   w:`A partner's starting basis is cash plus the adjusted basis of property contributed (not its fair market value). Liability relief counts as a cash distribution, but the partner's share of the partnership's debt is added back, so only the net relief of $${f(L-Math.round(L*pc/100))} reduces basis.`}},
+ ()=>{const p=pick(PEOPLE),beg=r(5000,80000,1000),inc=Math.random()<.5,share=r(5000,60000,1000),te=r(0,5000,500),liab=r(0,20000,1000),dist=r(0,Math.round((beg+(inc?share:0)+te+liab)*.6/1000)*1000,1000);
+   const pre=beg+te+liab+(inc?share:0)-dist,loss=inc?0:share,allowed=Math.min(loss,pre),end=pre-allowed,ask=inc?"end":pick(["end","allowed"]);
+   return{kind:"num",unit:"$",tol:1,t:`${p}'s basis in a partnership interest is ${$(beg)} at the start of the year. For the year, ${p}'s share of items is:<ul><li>Ordinary business ${inc?"income":"loss"}: ${$(share)}</li><li>Tax-exempt interest income: ${$(te)}</li><li>Increase in share of partnership liabilities: ${$(liab)}</li><li>Cash distributions received: ${$(dist)}</li></ul>What is ${ask==="end"?`${p}'s basis at the end of the year`:`the amount of the loss ${p} can deduct this year`}?`,ans:ask==="end"?end:allowed,
+   rows:[["Beginning basis",`$${f(beg)}`],...(inc?[["Add: share of ordinary income",`$${f(share)}`]]:[]),["Add: tax-exempt income",`$${f(te)}`],["Add: increase in share of liabilities",`$${f(liab)}`],["Less: cash distributions",`($${f(dist)})`],["Basis before losses",`$${f(pre)}`],...(inc?[]:[[`Less: deductible loss (limited to basis)`,`($${f(allowed)})`,ask==="allowed"?"tot":""]]),["Ending basis",`$${f(end)}`,ask==="end"?"tot":""]],
+   w:`Order matters: increases first, then distributions, then losses. Basis can't go below zero${!inc&&allowed<loss?`, so $${f(loss-allowed)} of the loss is suspended and carried forward until ${p} has more basis`:""}. Tax-exempt income increases basis so it stays tax-free when distributed.`}},
+ ()=>{const p=pick(PEOPLE),b=r(5000,60000,1000),cash=r(Math.round(b*.4/1000)*1000,Math.round(b*1.6/1000)*1000,1000),g=Math.max(0,cash-b);
+   return{kind:"num",unit:"$",tol:1,hint:"Enter 0 if no gain.",t:`${p} has an outside basis of ${$(b)} in a partnership and receives a nonliquidating cash distribution of ${$(cash)}. There are no marketable securities or hot assets involved. How much gain does ${p} recognize?`,ans:g,
+   rows:[["Outside basis",`$${f(b)}`],["Cash distributed",`$${f(cash)}`],["Gain recognized (cash in excess of basis)",`$${f(g)}`,"tot"],["Basis after the distribution",`$${f(Math.max(0,b-cash))}`]],
+   w:"Cash distributions reduce basis first and are tax-free up to basis. Only cash beyond basis is gain, generally capital gain. A partner never recognizes a loss on a nonliquidating distribution."}},
+ mc([
+  ["Guaranteed payments to a partner for services are…",["Deductible by the partnership and ordinary income to the partner","Treated as distributions that reduce basis tax-free","Not deductible by the partnership","Taxed only when the partnership liquidates"],"They're also subject to self-employment tax for the partner."],
+  ["Unlike a partner, an S corporation shareholder's basis does NOT include…",["A share of the entity's debts owed to third parties","Their share of ordinary income","Capital contributions","Their share of tax-exempt income"],"S corporation shareholders only get debt basis for loans they make directly to the corporation."],
+  ["Partnership income is taxed to the partners…",["In the year it's earned, whether or not it's distributed","Only when cash is distributed","At the entity level first","Only if the partnership elects"],"Each partner reports their distributive share from the Schedule K-1."],
+  ["Which form does a partnership file?",["Form 1065","Form 1120","Form 1120-S","Form 1041"],"1120 is for C corporations, 1120-S for S corporations, and 1041 for estates and trusts."],
+  ["An S corporation that converted from a C corporation may owe built-in gains tax when it…",["Sells assets that had appreciated before the conversion, within the recognition period","Pays a salary to an owner","Has more than 100 shareholders","Distributes cash"],"The tax stops C corporations from converting just to avoid corporate tax on appreciated assets. The recognition period is 5 years."],
+  ["A partner contributes property worth more than its basis. The partnership's basis in that property is…",["The partner's adjusted basis (carryover)","Its fair market value","Zero","The partner's outside basis"],"Section 723 carries the partner's basis over, along with the partner's holding period."],
+ ]),
+];
+
+// ================= GIFTS & ESTATES =================
+const EX=19000;
+const GIFTS=[
+ ()=>{const p=pick(PEOPLE),pool=[
+   ["Cash to a son",r(5000,80000,1000),"person"],["Stock (at fair market value) to a daughter",r(5000,80000,1000),"person"],["Cash to a friend",r(5000,40000,1000),"person"],
+   ["Tuition paid directly to a grandchild's university",r(10000,60000,1000),"tuition"],["Medical bills paid directly to a hospital for a sibling",r(5000,40000,1000),"medical"],
+   ["Cash to a spouse, who is a US citizen",r(20000,200000,5000),"spouse"],["Cash to a qualified charity",r(5000,100000,1000),"charity"]];
+   const items=shuffle(pool).slice(0,4);if(!items.some(x=>x[2]==="person"))items[0]=pool[0];
+   const tx=items.map(x=>x[2]==="person"?Math.max(0,x[1]-EX):0),tot=tx.reduce((a,b)=>a+b,0);
+   const why={person:`annual exclusion of $${f(EX)}`,tuition:"tuition paid directly is unlimited-excluded",medical:"medical paid directly is unlimited-excluded",spouse:"unlimited marital deduction",charity:"charitable deduction"};
+   return{kind:"num",unit:"$",tol:1,hint:"Enter 0 if none of it is taxable.",t:`This year, ${p}, who is single, made these gifts:<ul>${items.map(x=>`<li>${x[0]}: ${$(x[1])}</li>`).join("")}</ul>Using an annual exclusion of ${$(EX)} per recipient, what are ${p}'s total taxable gifts for the year?`,ans:tot,
+   rows:[...items.map((x,i)=>[`${x[0]} (${why[x[2]]})`,`$${f(tx[i])}`]),["Taxable gifts",`$${f(tot)}`,"tot"]],
+   w:"Each recipient gets their own annual exclusion. Tuition and medical payments made directly to the provider are excluded without limit, and gifts to a citizen spouse and to charity are fully deductible. Taxable gifts first use up the lifetime exemption before any gift tax is due. The exclusion amount is indexed for inflation, so check the current year's figure."}},
+ bankPick("Gross estate",s=>`Is this included in the decedent's gross estate?<span class="proc">${s}</span>`,["Yes, fully included","Yes, half included","No"],[
+  ["A life insurance policy the decedent owned on their own life.","Yes, fully included","Insurance is included when the decedent held incidents of ownership or the estate is the beneficiary."],
+  ["Property held in the decedent's revocable living trust.","Yes, fully included","The decedent kept control, so a revocable trust is part of the gross estate."],
+  ["A home owned with the decedent's spouse as joint tenants with right of survivorship.","Yes, half included","For spouses, half of jointly held property is included, regardless of who paid for it."],
+  ["Cash the decedent gave to a child four years before death.","No","Completed gifts generally aren't pulled back in. They're counted as adjusted taxable gifts in the estate tax calculation instead."],
+  ["A brokerage account in the decedent's name alone.","Yes, fully included","Everything the decedent owned outright is included at fair market value."],
+  ["A life insurance policy the decedent gave away two years before death.","Yes, fully included","Life insurance transferred within 3 years of death is pulled back into the estate."],
+ ],3),
+ mc([
+  ["An executor can elect the alternate valuation date only if it…",["Reduces both the gross estate and the estate tax","Increases the heirs' basis","Is within one year of death","Is requested by the heirs"],"The alternate date is 6 months after death. Property sold before then is valued on the sale date."],
+  ["The basis of property received as a gift, when its value exceeds the donor's basis, is…",["The donor's basis (carryover)","Fair market value at the gift","Zero","Fair market value at the donor's death"],"Gifts carry over the donor's basis, plus a share of any gift tax paid on appreciation."],
+  ["Portability lets a surviving spouse…",["Use the deceased spouse's unused estate tax exemption","Avoid income tax on inherited IRAs","Inherit property without probate","Transfer unlimited gifts to children"],"The executor elects it on a timely filed estate tax return for the first spouse to die."],
+  ["Gift tax returns (Form 709) are generally required when…",["Gifts to any one person exceed the annual exclusion","Any gift is made","Gifts go to a spouse","Gifts go to charity"],"A return is also needed to elect gift splitting with a spouse."],
+  ["Gift splitting lets a married couple…",["Treat a gift by one spouse as made half by each","Avoid filing gift tax returns","Double the lifetime exemption for one spouse","Give to each other tax-free"],"It effectively doubles the annual exclusion per recipient. Both spouses must consent."],
+ ]),
+];
+
+// ================= INDIVIDUAL PLANNING =================
+const PLAN=[
+ ()=>{const p=pick(PEOPLE),mfj=Math.random()<.5,th=mfj?250000:200000,magi=r(th-40000,th+250000,5000),nii=r(5000,150000,1000),base=Math.min(nii,Math.max(0,magi-th)),tax=Math.round(base*.038);
+   return{kind:"num",unit:"$",tol:1,hint:"Enter 0 if none is owed.",t:`${p} files ${mfj?"jointly":"as single"} with modified AGI of ${$(magi)}, including ${$(nii)} of net investment income. How much net investment income tax is owed?`,ans:tax,
+   rows:[[`Threshold (${mfj?"married filing jointly":"single"})`,`$${f(th)}`],["MAGI over the threshold",`$${f(Math.max(0,magi-th))}`],["Net investment income",`$${f(nii)}`],["Tax base (the smaller of the two)",`$${f(base)}`],["NIIT at 3.8%",`$${f(tax)}`,"tot"]],
+   w:"The 3.8% tax applies to the lesser of net investment income or MAGI above $200,000 (single) or $250,000 (married filing jointly). The thresholds aren't indexed for inflation."}},
+ ()=>{const p=pick(PEOPLE),loss=r(5000,40000,1000),magi=r(70000,170000,1000),allow=Math.max(0,25000-Math.max(0,(magi-100000)/2)),ans=Math.round(Math.min(loss,allow));
+   return{kind:"num",unit:"$",tol:1,hint:"Enter 0 if none of it is deductible this year.",t:`${p} actively participates in managing a rental house, which produced a ${$(loss)} loss. ${p} has no other passive income, and modified AGI is ${$(magi)}. How much of the rental loss can ${p} deduct this year?`,ans,
+   rows:[["Special allowance",`$25,000`],["Phase-out: 50% of MAGI over $100,000",`($${f(Math.min(25000,Math.max(0,(magi-100000)/2)))})`],["Allowance available",`$${f(allow)}`],["Deductible loss (lesser of loss or allowance)",`$${f(ans)}`,"tot"]],
+   w:`Rental losses are passive, but active participants can deduct up to $25,000 against other income. The allowance shrinks by 50% of MAGI above $100,000 and is gone at $150,000. ${ans<loss?`The remaining $${f(loss-ans)} is suspended and carried forward.`:""}`}},
+ mc([
+  ["Qualified distributions from a Roth IRA are…",["Tax-free","Taxed as ordinary income","Taxed as capital gains","Taxed only on the earnings"],"Roth contributions are made after tax, so qualified distributions (after age 59½ and 5 years) are tax-free."],
+  ["Health savings accounts are often called triple tax-advantaged because…",["Contributions are deductible, growth is tax-free, and qualified medical withdrawals are tax-free","They have no contribution limit","They can be used for any expense tax-free","Employers must match contributions"],"An HSA requires coverage by a high-deductible health plan."],
+  ["Earnings withdrawn from a 529 plan are tax-free when used for…",["Qualified education expenses","Any expense of the beneficiary","A first home purchase","Retirement"],"Non-qualified withdrawals make the earnings taxable plus a 10% penalty."],
+  ["The kiddie tax applies to a child's…",["Unearned income above a threshold, taxed at the parents' rate","Wages from a summer job","Gifts received","Scholarships used for tuition"],"It stops parents from shifting investment income to children in lower brackets."],
+  ["An early withdrawal from a traditional IRA before age 59½, without an exception, is generally…",["Taxed as ordinary income plus a 10% additional tax","Tax-free","Taxed as capital gain","Prohibited"],"Exceptions include certain education costs, a first home (up to $10,000), disability and others."],
+  ["Which strategy reduces current taxable income for an employee?",["Contributing to a traditional 401(k)","Contributing to a Roth 401(k)","Buying municipal bonds with after-tax savings","Paying off a car loan"],"Traditional 401(k) contributions are pre-tax. Roth contributions are after-tax, with tax-free growth instead."],
+ ]),
+];
+const GEN={ent:ENT,pass:PASS,gift:GIFTS,plan:PLAN};
+// ================= END CONTENT =================
+
+// ---------- State ----------
+const store={get(){try{return JSON.parse(localStorage.getItem("tcpDrill")||"{}")}catch(e){return{}}},set(v){try{localStorage.setItem("tcpDrill",JSON.stringify(v))}catch(e){}}};
+const saved=store.get();
+let S={right:0,total:0,streak:0,best:saved.best||0,life:+saved.life||0,lifeOk:+saved.lifeOk||0,mode:(GEN[saved.mode]||saved.mode==="mix")?saved.mode:"mix"};
+let cur=null,done=false;
+let missed=Array.isArray(saved.missed)?saved.missed:[];
+let redoQ=null;
+const card=document.getElementById("card");
+const persist=()=>store.set({best:S.best,life:S.life,lifeOk:S.lifeOk,mode:S.mode,missed});
+function updStats(){sScore.textContent=`${S.right}/${S.total}`;sStreak.textContent=S.streak;sBest.textContent=S.best}
+function record(ok){S.life++;if(ok)S.lifeOk++;S.total++;if(ok){S.right++;S.streak++;S.best=Math.max(S.best,S.streak)}else S.streak=0;
+  if(!ok&&!cur._mid){missed.push({id:Date.now()+"-"+Math.random().toString(36).slice(2,7),at:new Date().toLocaleDateString("en-US",{month:"short",day:"numeric"}),q:JSON.parse(JSON.stringify(cur))});if(missed.length>150)missed=missed.slice(-150)}
+  if(ok&&cur._mid)missed=missed.filter(m=>m.id!==cur._mid);
+  persist();updStats();renderMissed()}
+const redoTag=()=>cur._mid?`<span class="redo">Redo · ${redoQ?redoQ.length:0} left after this</span>`:"";
+const eyebrow=label=>`<div class="eyebrow"><span class="topic">${TOPICS[cur.topic]}</span><span>${label}</span>${redoTag()}</div>`;
+
+function next(){
+  done=false;
+  if(redoQ){
+    let m=null;while(redoQ.length&&!m){const id=redoQ.shift();m=missed.find(x=>x.id===id)}
+    if(!m){redoQ=null;updRedoBtn();
+      card.innerHTML=`<div class="eyebrow"><span>Redo finished</span></div><p class="prompt">${missed.length?`You've been through every miss. ${missed.length} still on the list: the ones you got wrong again.`:"Every missed question is cleared."}</p><div class="actions"><span class="spacer"></span><button class="btn primary" id="go" type="button">Back to practice →</button></div>`;
+      go.onclick=next;go.focus();return}
+    cur={...m.q,_mid:m.id};display();return;
+  }
+  const topic=S.mode==="mix"?pick(Object.keys(GEN)):S.mode;
+  cur={topic,...pick(GEN[topic])(pick(COS))};
+  display();
+}
+function display(){if(cur.kind==="num")renderNum();else renderMC()}
+
+// ---------- Missed list ----------
+const fmtAns=q=>(q.ans<0?"−":"")+(q.unit==="$"?`$${f(q.ans)}`:q.unit==="%"?`${f(q.ans)}%`:f(q.ans));
+const workTable=rows=>`<div class="tw"><table class="journal"><tbody>${rows.map(([lb,n,c])=>`<tr class="${c||""}"><td>${lb}</td><td class="n">${n}</td></tr>`).join("")}</tbody></table></div>`;
+function answerHTML(q){return q.kind==="num"?`<div><b>Answer:</b> ${fmtAns(q)}</div>${workTable(q.rows)}`:`<div><b>Answer:</b> ${q.ans}</div>`}
+function renderMissed(){
+  missN.textContent=`(${missed.length})`;
+  const list=[...missed].reverse().slice(0,60);
+  missList.innerHTML=missed.length?list.map(m=>`<div class="miss"><div class="when">${m.at} · ${TOPICS[m.q.topic]} · ${m.q.label||(m.q.kind==="num"?"Calculation":"Concept check")}</div><div class="mq">${m.q.q||m.q.t}</div>${answerHTML(m.q)}<p>${m.q.w}</p></div>`).join("")+(missed.length>60?`<p class="note">Showing the 60 most recent of ${missed.length}.</p>`:"")
+    :`<p class="note">Nothing here yet. Questions you miss will show up here.</p>`;
+  updRedoBtn();
+}
+function updRedoBtn(){redoBtn.textContent=redoQ?"Stop redo":`Redo my misses${missed.length?` (${missed.length})`:""}`;redoBtn.disabled=!redoQ&&!missed.length}
+redoBtn.onclick=()=>{if(redoQ){redoQ=null;updRedoBtn();next();return}redoQ=shuffle(missed.map(m=>m.id));updRedoBtn();next();card.scrollIntoView({block:"start",behavior:"smooth"})};
+function armed(btn,label,armedLabel,action){let on=false,t;btn.onclick=()=>{if(!on){on=true;btn.textContent=armedLabel;btn.classList.add("armed");t=setTimeout(()=>{on=false;btn.textContent=label;btn.classList.remove("armed")},4000);return}
+  clearTimeout(t);on=false;btn.textContent=label;btn.classList.remove("armed");action()}}
+armed(clearMiss,"Clear list","Click again to clear",()=>{missed=[];redoQ=null;persist();renderMissed()});
+armed(resetStats,"Reset","Click again",()=>{S.right=0;S.total=0;S.streak=0;S.best=0;persist();updStats()});
+
+// ---------- Numeric ----------
+const parse=v=>{let s=String(v).trim(),neg=/^\(.*\)$/.test(s)||/^[-−]/.test(s);const n=parseFloat(s.replace(/[$,%\s()−-]/g,""));return isFinite(n)?(neg?-1:1)*n:NaN};
+function renderNum(){
+  const pre=cur.unit==="$"?"$":"",post=cur.unit==="%"?"%":"";
+  card.innerHTML=`${eyebrow("Calculation")}<div class="prompt">${cur.t}</div>
+  <label class="numin" id="nwrap">${pre?`<span>${pre}</span>`:""}<input id="num" inputmode="decimal" placeholder="0" aria-label="Your answer">${post?`<span>${post}</span>`:""}</label>
+  <p class="note" style="margin:6px 0 0">${cur.hint?cur.hint:cur.unit==="%"?"Enter a percent, e.g. 12.5. Two decimals is plenty.":cur.unit==="$"?"Round to the nearest dollar.":"Enter a whole number."}</p>
+  <div class="actions"><span class="spacer"></span><button class="btn" id="show" type="button">Show answer</button><button class="btn primary" id="go" type="button">Check</button></div><div id="out"></div>`;
+  const fin=revealed=>{
+    const v=parse(num.value);
+    if(!revealed&&!isFinite(v)){out.innerHTML=`<div class="fb"><p class="note">Enter a number.</p></div>`;return}
+    done=true;const ok=!revealed&&Math.abs(v-cur.ans)<=(cur.tol||.5);record(ok);num.disabled=true;
+    if(!revealed)nwrap.classList.add(ok?"ok":"no");
+    out.innerHTML=`<div class="fb ${revealed?"":ok?"good":"bad"}"><h3>${revealed?"Here's the answer":ok?"Correct":`Not quite. The answer is ${fmtAns(cur)}`}</h3>${workTable(cur.rows)}<p>${cur.w}</p></div>`;
+    show.hidden=true;go.textContent="Next question →";go.focus();
+  };
+  num.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();done?next():fin(false)}};
+  go.onclick=()=>done?next():fin(false);
+  show.onclick=()=>{if(!done)fin(true)};
+}
+
+// ---------- Multiple choice ----------
+function renderMC(){
+  card.innerHTML=`${eyebrow(cur.label||"Concept check")}<div class="prompt">${cur.q}</div>
+  <div class="opts">${cur.opts.map(o=>`<button class="opt" type="button">${o}</button>`).join("")}</div>
+  <div id="out"></div><div class="actions"><span class="spacer"></span><button class="btn primary" id="go" type="button" hidden>Next question →</button></div>`;
+  card.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{
+    if(done)return;done=true;const ok=b.textContent===cur.ans;record(ok);
+    card.querySelectorAll(".opt").forEach(x=>{x.disabled=true;if(x.textContent===cur.ans)x.classList.add("ok")});
+    if(!ok)b.classList.add("no");
+    out.innerHTML=`<div class="fb ${ok?"good":"bad"}"><h3>${ok?"Correct":"Not quite"}</h3><p>${cur.w}</p></div>`;
+    go.hidden=false;go.onclick=next;go.focus();
+  });
+}
+
+// ---------- Modes ----------
+document.querySelectorAll(".modes button").forEach(b=>{
+  b.setAttribute("aria-pressed",b.dataset.mode===S.mode);
+  b.onclick=()=>{S.mode=b.dataset.mode;redoQ=null;persist();updRedoBtn();
+    document.querySelectorAll(".modes button").forEach(x=>x.setAttribute("aria-pressed",x===b));next()};
+});
+updStats();renderMissed();next();
+</script>
+</body>
+</html>
