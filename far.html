@@ -183,7 +183,7 @@ a:visited{color:#551a8b}
   <header>
     <div>
       <h1>FAR <span>Drill</span></h1>
-      <p class="sub">Bonds, leases, revenue recognition and income taxes. Endless CPA-style problems with the work shown.</p>
+      <p class="sub">Every major FAR topic: current liabilities, bonds, leases, stockholders' equity, EPS, cash flows, revenue recognition and income taxes. Endless CPA-style problems with the work shown.</p>
     </div>
     <div class="stats" aria-live="polite">
       <div>Score<b id="sScore">0/0</b></div>
@@ -194,11 +194,16 @@ a:visited{color:#551a8b}
   </header>
 
   <div class="modes" role="group" aria-label="Topic">
-    <button id="mMix" data-mode="mix" aria-pressed="true">Mixed</button>
-    <button id="mBonds" data-mode="bonds" aria-pressed="false">Bonds</button>
-    <button id="mLeases" data-mode="leases" aria-pressed="false">Leases</button>
-    <button id="mRev" data-mode="rev" aria-pressed="false">Revenue</button>
-    <button id="mTax" data-mode="tax" aria-pressed="false">Income taxes</button>
+    <button data-mode="mix" aria-pressed="true">Mixed</button>
+    <button data-mode="cl" aria-pressed="false">Current liabilities</button>
+    <button data-mode="bonds" aria-pressed="false">Bonds</button>
+    <button data-mode="leases" aria-pressed="false">Leases</button>
+    <button data-mode="eq" aria-pressed="false">Equity</button>
+    <button data-mode="eps" aria-pressed="false">EPS</button>
+    <button data-mode="cf" aria-pressed="false">Cash flows</button>
+    <button data-mode="stmt" aria-pressed="false">Statement builder</button>
+    <button data-mode="rev" aria-pressed="false">Revenue</button>
+    <button data-mode="tax" aria-pressed="false">Income taxes</button>
   </div>
 
   <section class="card" id="card" aria-live="polite"></section>
@@ -240,7 +245,44 @@ a:visited{color:#551a8b}
       <li>Future taxable amounts → DTL. Future deductible amounts → DTA. Permanent differences → no deferred tax.</li>
       <li>Measure deferred taxes at the <b>enacted</b> rate for the reversal years. Valuation allowance if more likely than not a DTA won't be realized.</li>
     </ul>
-    <p class="note">Round every calculation to the nearest dollar.</p>
+    <h4>Current liabilities &amp; contingencies</h4>
+    <ul class="refl">
+      <li>Accrued interest = principal × rate × months ÷ 12. If a total includes sales tax: revenue = total ÷ (1 + rate).</li>
+      <li>Loss contingency: <b>probable + estimable</b> → accrue (best estimate; if none, the low end of the range). <b>Reasonably possible</b> → disclose only. <b>Remote</b> → nothing. Gain contingencies are never accrued.</li>
+    </ul>
+    <h4>More on bonds &amp; leases</h4>
+    <ul class="refl">
+      <li>Early retirement: gain or loss = carrying value − price paid. Conversion (book value method): no gain or loss.</li>
+      <li>Sold between interest dates: buyer pays accrued interest since the last interest date.</li>
+      <li>ROU asset = lease liability + initial direct costs + prepaid payments − incentives. Payments at the start of each period → annuity due.</li>
+    </ul>
+    <h4>Stockholders' equity</h4>
+    <ul class="refl">
+      <li>Stock accounts hold par; the rest goes to APIC. No gains or losses on treasury stock: excess to APIC—Treasury Stock; shortfalls use that APIC first, then retained earnings.</li>
+      <li>Small stock dividend (&lt; 20–25%): market value. Large: par. Splits: memo entry only. Property dividends: remeasure to fair value first.</li>
+      <li>Cumulative preferred gets arrears plus the current year before common.</li>
+    </ul>
+    <h4>EPS</h4>
+    <ul class="refl">
+      <li>Basic = (net income − current-year preferred dividends) ÷ weighted-average shares. Cumulative preferred: subtract always; noncumulative: only if declared.</li>
+      <li>Splits and stock dividends are retroactive, not weighted.</li>
+      <li>Options (treasury stock method): incremental shares = options − options × exercise price ÷ average market price.</li>
+      <li>Convertible bonds (if-converted): add after-tax interest and the conversion shares. Leave out anything antidilutive.</li>
+    </ul>
+    <h4>Cash flows (US GAAP)</h4>
+    <ul class="refl">
+      <li><b>Operating</b>: items in net income, including interest paid, interest received and dividends received. <b>Investing</b>: long-term assets, non-trading investments, loans made. <b>Financing</b>: borrowing and repaying principal, stock, <b>dividends paid</b>, finance lease principal.</li>
+      <li>Indirect: net income + noncash expenses and losses − gains; current assets ↑ subtract, current liabilities ↑ add.</li>
+      <li>Direct: customers = sales − ↑AR + ↑unearned revenue. Suppliers = COGS + ↑inventory − ↑AP.</li>
+      <li>Noncash investing and financing (debt converted to stock, assets bought with notes) is disclosed separately.</li>
+    </ul>
+    <h4>More on revenue</h4>
+    <ul class="refl">
+      <li>Residual approach only for highly variable or uncertain standalone prices. Expected returns → refund liability, not revenue.</li>
+      <li>Principal (controls the good) → gross. Agent → net. A loss contract → recognize the whole loss now.</li>
+    </ul>
+
+    <p class="note">Round dollar answers to the nearest dollar and EPS to the nearest cent.</p>
   </details>
 
   <div class="sitefoot"><hr>Accounting Drill Pads &middot; Built by Keith Silverstein &middot; UConn School of Business</div>
@@ -249,23 +291,84 @@ a:visited{color:#551a8b}
 <script>
 // ---------- Chart of accounts ----------
 const ACCTS={
-  "Asset":["Cash","Accounts Receivable","Right-of-Use Asset","Deferred Tax Asset"],
-  "Liability (incl. contra and adjunct)":["Bonds Payable","Discount on Bonds Payable","Premium on Bonds Payable","Lease Liability","Interest Payable","Income Taxes Payable","Deferred Tax Liability","Contract Liability","Unearned Revenue"],
-  "Revenue":["Revenue"],
-  "Expense":["Interest Expense","Amortization Expense","Lease Expense","Income Tax Expense"]
+ "Asset": [
+  "Cash",
+  "Accounts Receivable",
+  "Right-of-Use Asset",
+  "Deferred Tax Asset",
+  "Land",
+  "Equipment",
+  "Investments",
+  "Contract Asset",
+  "Inventory",
+  "Estimated Inventory Returns",
+  "Contract Cost Asset"
+ ],
+ "Liability (incl. contra and adjunct)": [
+  "Bonds Payable",
+  "Discount on Bonds Payable",
+  "Premium on Bonds Payable",
+  "Lease Liability",
+  "Interest Payable",
+  "Income Taxes Payable",
+  "Deferred Tax Liability",
+  "Contract Liability",
+  "Unearned Revenue",
+  "Accounts Payable",
+  "Wages Payable",
+  "Sales Taxes Payable",
+  "Notes Payable",
+  "Discount on Notes Payable",
+  "Warranty Liability",
+  "Litigation Liability",
+  "Dividends Payable",
+  "Property Dividends Payable",
+  "Refund Liability"
+ ],
+ "Equity": [
+  "Common Stock",
+  "Preferred Stock",
+  "Additional Paid-in Capital—Common",
+  "Additional Paid-in Capital—Preferred",
+  "Additional Paid-in Capital—Treasury Stock",
+  "Additional Paid-in Capital—Stock Options",
+  "Common Stock Dividend Distributable",
+  "Treasury Stock",
+  "Retained Earnings"
+ ],
+ "Revenue and gains": [
+  "Revenue",
+  "Sales Revenue",
+  "Gain on Bond Retirement",
+  "Gain on Investments"
+ ],
+ "Expense and losses": [
+  "Interest Expense",
+  "Amortization Expense",
+  "Lease Expense",
+  "Income Tax Expense",
+  "Wages Expense",
+  "Warranty Expense",
+  "Litigation Loss",
+  "Loss on Bond Retirement",
+  "Compensation Expense",
+  "Cost of Goods Sold",
+  "Commission Expense"
+ ]
 };
 
 // ---------- Helpers ----------
 const pick=a=>a[Math.floor(Math.random()*a.length)];
 const r=(min,max,step)=>Math.round((min+Math.random()*(max-min))/step)*step||step;
-const f=n=>Math.abs(n).toLocaleString("en-US");
+const f=n=>Math.abs(n).toLocaleString("en-US",{maximumFractionDigits:2});
 const fm=n=>n<0?`(${f(n)})`:f(n);
 const $=n=>`<strong>$${f(n)}</strong>`;
 const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
 const r4=x=>Math.round(x*1e4)/1e4;
 const L=(a,d,c)=>[a,d||0,c||0];
 const COS=["Harbor Lane Bikes","Northgate Tutoring","Pine Hollow Landscaping","Bluebird Print Shop","Summit Tech Repair","Atlas Moving Co.","Maple Street Dental Lab","Ridgeview Photo Studio","Riverbend Pool Service","Cobalt Coworking","Granite Peak Outfitters","Lumen Software"];
-const TOPICS={bonds:"Bonds",leases:"Leases",rev:"Revenue",tax:"Income taxes"};
+const TOPICS={cl:"Current liabilities",bonds:"Bonds",leases:"Leases",eq:"Equity",eps:"EPS",cf:"Cash flows",stmt:"Statement builder",rev:"Revenue",tax:"Income taxes"};
+const ansTxt=q=>q.unit==="sh"?`${f(q.ans)} shares`:`$${fm(q.ans)}`;
 const mc=list=>()=>{const c=pick(list);return{kind:"mc",q:c[0],ans:c[1][0],opts:shuffle(c[1]),w:c[2]}};
 
 // ================= BONDS =================
@@ -434,7 +537,480 @@ const TAX=[
   ["When an enacted tax rate change occurs, the effect on existing deferred tax balances is…",["Recognized in income tax expense in the period of enactment","Applied retrospectively to prior years","Ignored until the differences reverse","Recorded directly in retained earnings"],"Remeasure the DTA and DTL right away and run the change through continuing operations."],
  ]),
 ];
-const GEN={bonds:BONDS,leases:LEASES,rev:REV,tax:TAX};
+// ===== Liabilities & equity, cash flows and more revenue (own scopes) =====
+const LEG=(()=>{
+// ---------- Helpers ----------
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const r=(min,max,step)=>Math.round((min+Math.random()*(max-min))/step)*step||step;
+const f=n=>Math.abs(n).toLocaleString("en-US",{maximumFractionDigits:2});
+const fm=n=>n<0?`(${f(n)})`:f(n);
+const $=n=>`<strong>$${f(n)}</strong>`;
+const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const r4=x=>Math.round(x*1e4)/1e4;
+const c2=x=>Math.round(x*100)/100;
+const L=(a,d,c)=>[a,d||0,c||0];
+const ansTxt=q=>q.unit==="sh"?`${f(q.ans)} shares`:`$${fm(q.ans)}`;
+const COS=["Harbor Lane Bikes","Northgate Tutoring","Pine Hollow Landscaping","Bluebird Print Shop","Summit Tech Repair","Atlas Moving Co.","Maple Street Dental Lab","Ridgeview Photo Studio","Riverbend Pool Service","Cobalt Coworking","Granite Peak Outfitters","Lumen Software"];
+const MON=["January","February","March","April","May","June","July","August","September","October","November","December"];
+const TOPICS={cl:"Current liabilities",bonds:"Bonds",leases:"Leases",cap:"Contributed capital",re:"Dividends & RE",eps:"EPS"};
+const mc=list=>()=>{const c=pick(list);return{kind:"mc",q:c[0],ans:c[1][0],opts:shuffle(c[1]),w:c[2]}};
+
+// ================= CURRENT LIABILITIES & CONTINGENCIES =================
+function contingency(co){
+  const gain=Math.random()<.15,like=gain?"probable":pick(["probable","probable","probable","reasonably possible","remote"]);
+  const low=r(50000,400000,10000),high=low+r(60000,500000,10000),best=Math.round((low+(high-low)*pick([.3,.5,.6]))/10000)*10000,est=pick(["point","best","nobest"]);
+  const OA=[`Accrue $${f(low)}`,`Accrue $${f(best)}`,`Accrue $${f(high)}`],DIS="Disclose only, no accrual",NONE="Neither accrue nor disclose";
+  let q,ans,w;
+  if(gain){q=`${co} is suing a supplier for breach of contract. Its lawyers say a judgment in ${co}'s favor of about ${$(best)} is probable. How should ${co} report this at year-end?`;
+    ans=DIS;w="Gain contingencies are never recognized before they're realized, even when probable. Disclose them, carefully, so the note doesn't imply the gain is certain."}
+  else{
+    const est_t=est==="point"?`Legal counsel estimates the loss at ${$(best)}.`:est==="best"?`Counsel estimates the loss at ${$(low)} to ${$(high)}, with ${$(best)} the best estimate.`:`Counsel estimates the loss at ${$(low)} to ${$(high)}; no amount in that range is more likely than any other.`;
+    q=`A customer sues ${co} over a product defect. Counsel says an unfavorable outcome is <em>${like}</em>. ${est_t} How should ${co} report this at year-end?`;
+    if(like==="remote"){ans=NONE;w="Remote loss contingencies need neither accrual nor disclosure (guarantees are the main exception)."}
+    else if(like==="reasonably possible"){ans=DIS;w="Reasonably possible losses are disclosed in the notes, with the estimated range, but not accrued."}
+    else{ans=est==="nobest"?OA[0]:OA[1];
+      w=est==="nobest"?`Probable and estimable, so accrue. When no amount in the range is a better estimate, US GAAP accrues the <b>low end</b> ($${f(low)}) and discloses the possible additional loss up to $${f(high)}.`:`Probable and reasonably estimable, so accrue the ${est==="point"?"estimate":"best estimate"} ($${f(best)}) as a Litigation Loss and Litigation Liability, and disclose the nature of the suit.`}}
+  const opts=shuffle([...new Set([ans,...shuffle([...OA,DIS,NONE].filter(x=>x!==ans)).slice(0,3)])]);
+  return{kind:"mc",label:"Contingency",q,ans,opts,w};
+}
+const CL=[
+ co=>{const P=r(12000,240000,12000),rt=pick([5,6,7,8,9,10,12]),m=pick([1,2,3,4,5,6,8,9]),ai=Math.round(P*rt/100*m/12);
+  return{kind:"je",t:`On ${MON[12-m]} 1, ${co} signs a ${$(P)}, ${rt}% note payable. Principal and interest are due in one year. ${co}'s year ends December 31. Record the year-end interest accrual.`,
+  l:[L("Interest Expense",ai),L("Interest Payable",0,ai)],h:`Count the months from ${MON[12-m]} 1 to December 31.`,
+  w:`$${f(P)} × ${rt}% × ${m}/12 = $${f(ai)}. Interest builds up over time, so it's accrued at year-end even though nothing is paid until the note matures.`}},
+ co=>{const S=r(1000,60000,100),t=pick([5,6,6.35,7,8]),tx=Math.round(S*t/100);
+  return{kind:"je",t:`${co} makes cash sales of ${$(S)} and charges ${t}% sales tax on top. Record the sales.`,l:[L("Cash",S+tx),L("Sales Revenue",0,S),L("Sales Taxes Payable",0,tx)],
+  h:"The sales tax isn't revenue. The company is collecting it for the state.",w:`Tax = $${f(S)} × ${t}% = $${f(tx)}, owed to the state until it's remitted. Revenue is only the $${f(S)} selling price.`}},
+ co=>{const S=r(1000,60000,100),t=pick([5,6,7,8]),tx=Math.round(S*t/100),T=S+tx;
+  return{kind:"num",tol:1,t:`${co}'s register shows ${$(T)} of cash sales for the day. The total <em>includes</em> ${t}% sales tax. How much is sales revenue?`,ans:S,
+  rows:[["Total collected",T],[`÷ 1.${String(t).padStart(2,"0")}`,S,"tot"],["Sales tax payable",tx]],w:`When the total includes tax, divide by (1 + rate). Multiplying $${f(T)} by ${t}% and subtracting is the classic trap: it overstates the tax.`}},
+ co=>{const F=r(20000,300000,10000),d=pick([6,8,9,10,12]),D=Math.round(F*d/100);
+  return{kind:"je",t:`On January 1, ${co} signs a ${$(F)}, one-year, zero-interest-bearing note payable. The bank discounts it at ${d}%. Record the note.`,
+  l:[L("Cash",F-D),L("Discount on Notes Payable",D),L("Notes Payable",0,F)],alts:[[L("Cash",F-D),L("Notes Payable",0,F-D)]],altNote:"the net method (note recorded at the cash received)",
+  h:"With a discounted note, the bank takes its interest up front.",w:`Proceeds = $${f(F)} − ($${f(F)} × ${d}%) = $${f(F-D)}. The $${f(D)} discount is a contra-liability amortized to interest expense over the year. Because ${co} only gets $${f(F-D)}, the effective rate is ${(D/(F-D)*100).toFixed(1)}%, higher than ${d}%.`}},
+ co=>{const W=r(5000,50000,500),k=pick([1,2,3,4]),a=Math.round(W*k/5),day=["Monday","Tuesday","Wednesday","Thursday"][k-1];
+  return{kind:"je",t:`${co} pays its staff ${$(W)} every Friday for a Monday–Friday week. This year ends on a ${day}. Record the accrued wages.`,
+  l:[L("Wages Expense",a),L("Wages Payable",0,a)],h:"How many workdays have been earned but not paid?",w:`${k} of 5 days: $${f(W)} × ${k}/5 = $${f(a)}. It's an expense this year and a liability until Friday's payroll.`}},
+ co=>{const S=r(200000,2000000,10000),p=pick([1,2,3,4,5]),beg=r(5000,60000,1000),exp=Math.round(S*p/100),paid=Math.round((beg+exp)*pick([.4,.5,.6,.7])/100)*100,end=beg+exp-paid;
+  return{kind:"num",tol:1,t:`${co} gives a one-year assurance warranty and estimates warranty costs at ${p}% of sales. The warranty liability started the year at ${$(beg)}. Sales were ${$(S)} and ${co} spent ${$(paid)} on repairs. What is the ending warranty liability?`,ans:end,
+  rows:[["Beginning liability",beg],[`Add: expense accrued (${f(S)} × ${p}%)`,exp],["Less: repairs paid",-paid],["Ending liability",end,"tot"]],
+  w:"An assurance warranty is accrued as an expense in the year of the sale. Actual repair costs reduce the liability, not expense."}},
+ contingency,contingency,
+ mc([
+  ["A short-term obligation can be reported as noncurrent if…",["The company intends to refinance it long-term and shows it can","Management simply intends to refinance it","It's due within 13 months","The lender verbally agrees to wait"],"Intent alone isn't enough. Ability is shown by actually refinancing after year-end (before the statements are issued) or by a signed financing agreement."],
+  ["An accrual for compensated absences (vacation pay) is required when…",["Employees have earned it, it vests or accumulates, and payment is probable and estimable","Employees actually take the time off","The employee leaves the company","The amount is material, regardless of vesting"],"All four conditions are needed. Accumulating but non-vesting sick pay usually doesn't have to be accrued."],
+  ["An assurance-type warranty is accounted for by…",["Accruing estimated expense and a liability at the time of sale","Deferring part of the sale price as a contract liability","Expensing repairs only when they happen","Recognizing extra revenue over the warranty period"],"A service-type (extended) warranty is a separate performance obligation instead, deferred as a contract liability."],
+  ["The current portion of long-term debt is…",["The principal due within the next year (or operating cycle)","All interest on the debt","The full balance if any payment is due this year","Never shown separately"],"Reclassify the principal due within 12 months to current liabilities."],
+  ["A loss contingency that is probable but cannot be reasonably estimated is…",["Disclosed but not accrued","Accrued at zero and disclosed","Accrued at the high end","Ignored"],"Accrual needs both probable AND reasonably estimable."],
+  ["Unearned revenue is reported as…",["A liability until the company performs","Revenue when cash is received","A contra-asset","Part of equity"],"Cash received before performance creates an obligation to deliver."],
+ ]),
+];
+
+// ================= BONDS =================
+function bondA(){
+  const F=pick([100000,200000,500000,1000000]),n=pick([3,4,5,6,8,10]),s=pick([5,6,7,8,9]),m=pick([s-2,s-1,s+1,s+2].filter(x=>x>=3)),i=m/100,j=s/100;
+  const pv1=r4((1+i)**-n),pva=r4((1-(1+i)**-n)/i),pv1s=r4((1+j)**-n),pvas=r4((1-(1+j)**-n)/j),C=F*s/100,pvF=Math.round(F*pv1),pvC=Math.round(C*pva);
+  return{F,n,s,m,i,pv1,pva,pv1s,pvas,C,pvF,pvC,price:pvF+pvC,disc:m>s};
+}
+function facA(b){const rows=[[b.s,b.pv1s,b.pvas],[b.m,b.pv1,b.pva]].sort((x,y)=>x[0]-y[0]);
+  return `<div class="tw"><table class="fac"><thead><tr><th>Rate</th><th>PV of $1, ${b.n} periods</th><th>PV of ordinary annuity, ${b.n} periods</th></tr></thead><tbody>${rows.map(x=>`<tr><td>${x[0]}%</td><td>${x[1].toFixed(4)}</td><td>${x[2].toFixed(4)}</td></tr>`).join("")}</tbody></table></div>`}
+const bT=(co,b)=>`On January 1, ${co} issues ${$(b.F)} of ${b.n}-year, ${b.s}% bonds that pay interest annually on December 31. The market rate is ${b.m}%.`;
+const BONDS=[
+ co=>{const b=bondA();return{kind:"num",tol:2,t:`${bT(co,b)}${facA(b)}What is the issue price?`,ans:b.price,
+  rows:[[`Face $${f(b.F)} × ${b.pv1.toFixed(4)}`,b.pvF],[`Interest $${f(b.C)} × ${b.pva.toFixed(4)}`,b.pvC],["Issue price",b.price,"tot"]],
+  w:`Discount both cash flows at the <b>market</b> rate (${b.m}%). Cash interest is still face × stated rate = $${f(b.C)}. Market ${b.disc?"above":"below"} stated means a ${b.disc?"discount":"premium"}.`}},
+ co=>{const b=bondA(),ie=Math.round(b.price*b.i),am=Math.abs(ie-b.C),cv=b.disc?b.price+am:b.price-am,ask=pick(["ie","cv"]);
+  return{kind:"num",tol:1,t:`${bT(co,b)} The bonds sold for ${$(b.price)}. Using the effective-interest method, what is ${ask==="ie"?"<em>interest expense</em> for the first year":"the <em>carrying value</em> on December 31 after the first payment"}?`,ans:ask==="ie"?ie:cv,
+  rows:[["Carrying value at issue",b.price],[`Interest expense (× ${b.m}%)`,ie,ask==="ie"?"tot":""],[`Cash paid (${f(b.F)} × ${b.s}%)`,-b.C],[`${b.disc?"Discount":"Premium"} amortized`,b.disc?am:-am],["Carrying value, Dec 31",cv,ask==="cv"?"tot":""]],
+  w:`Expense = carrying value × market rate. The gap between expense and cash ($${f(am)}) is amortization, moving the carrying value ${b.disc?"up":"down"} toward face.`}},
+ co=>{const b=bondA(),ie=Math.round(b.price*b.i),am=Math.abs(ie-b.C);
+  return{kind:"je",t:`${bT(co,b)} The bonds sold for ${$(b.price)}. Record the first December 31 interest payment under the effective-interest method.`,
+  l:b.disc?[L("Interest Expense",ie),L("Discount on Bonds Payable",0,am),L("Cash",0,b.C)]:[L("Interest Expense",ie),L("Premium on Bonds Payable",am),L("Cash",0,b.C)],
+  h:"Expense uses the market rate on carrying value; cash uses the stated rate on face.",w:`Interest expense $${f(b.price)} × ${b.m}% = $${f(ie)}; cash $${f(b.C)}; the $${f(am)} difference amortizes the ${b.disc?"discount":"premium"}.`}},
+ co=>{const b=bondA(),d=Math.abs(b.F-b.price),am=Math.round(d/b.n),ie=b.disc?b.C+am:b.C-am;
+  return{kind:"num",tol:1,t:`${bT(co,b)} The bonds sold for ${$(b.price)}. The difference from the effective-interest method isn't material, so ${co} uses straight-line amortization. What is annual interest expense?`,ans:ie,
+  rows:[["Cash interest",b.C],[`${b.disc?"Add: discount":"Less: premium"} ÷ ${b.n} years ($${f(d)} ÷ ${b.n})`,b.disc?am:-am],["Interest expense",ie,"tot"]],
+  w:`Straight-line spreads the ${b.disc?"discount":"premium"} evenly, so expense is the same every year. A discount adds to expense; a premium reduces it.`}},
+ co=>{const F=pick([100000,200000,500000]),s=pick([6,8,9,10,12]),mo=pick([2,3,4,5]),ai=Math.round(F*s/100*mo/12);
+  return{kind:"je",t:`${co}'s ${$(F)}, ${s}% bonds are dated January 1 and pay interest semiannually on June 30 and December 31. ${co} sells them at face value on ${MON[mo]} 1, plus accrued interest. Record the sale.`,
+  l:[L("Cash",F+ai),L("Bonds Payable",0,F),L("Interest Expense",0,ai)],alts:[[L("Cash",F+ai),L("Bonds Payable",0,F),L("Interest Payable",0,ai)]],altNote:"crediting Interest Payable instead of Interest Expense",
+  h:"Buyers pay for interest that built up since the last interest date; they get it back in the June 30 payment.",
+  w:`Accrued interest = $${f(F)} × ${s}% × ${mo}/12 = $${f(ai)}. On June 30 ${co} pays a full six months, so crediting Interest Expense now leaves the right net expense for the ${6-mo} months the bonds were actually out.`}},
+ co=>{const F=pick([200000,500000,1000000]),p=pick([97,98,99,101,102,103]),paid=F*p/100;let D=r(4000,40000,1000);if(F-D===paid)D+=1000;const cv=F-D,gl=cv-paid;
+  return{kind:"je",t:`${co} retires ${$(F)} of bonds early by buying them back at ${p} (${p}% of face). The unamortized discount is ${$(D)}. Ignore accrued interest. Record the retirement.`,
+  l:gl>0?[L("Bonds Payable",F),L("Discount on Bonds Payable",0,D),L("Cash",0,paid),L("Gain on Bond Retirement",0,gl)]:[L("Bonds Payable",F),L("Loss on Bond Retirement",-gl),L("Discount on Bonds Payable",0,D),L("Cash",0,paid)],
+  h:"Compare the price paid with the carrying value, not with face.",w:`Carrying value = $${f(F)} − $${f(D)} = $${f(cv)}. Paid $${f(paid)}, so a ${gl>0?"gain":"loss"} of $${f(gl)}. Remove the bonds and the remaining discount entirely.`}},
+ co=>{const F=pick([100000,200000,500000]),D=r(2000,20000,1000),per=pick([20,25,40,50]),par=pick([1,5,10]),sh=F/1000*per,cs=sh*par,ap=F-D-cs;
+  return{kind:"je",t:`Holders convert ${$(F)} of ${co}'s convertible bonds into common stock. The bonds have an unamortized discount of ${$(D)}. Each $1,000 bond converts into ${per} shares of $${par} par common. ${co} uses the book value method. Record the conversion.`,
+  l:[L("Bonds Payable",F),L("Discount on Bonds Payable",0,D),L("Common Stock",0,cs),L("Additional Paid-in Capital—Common",0,ap)],
+  h:"Under the book value method there's no gain or loss: the stock takes over the bonds' carrying value.",
+  w:`Shares = ${F/1000} bonds × ${per} = ${f(sh)}; par = $${f(cs)}. Carrying value $${f(F-D)} − par $${f(cs)} = $${f(ap)} to APIC.`}},
+ mc([
+  ["Bonds are issued when the market rate is higher than the stated rate. They sell at…",["A discount","A premium","Face value","It depends on the term"],"Investors pay less than face for a coupon below what the market offers."],
+  ["Under US GAAP, bond issue costs are…",["Deducted from the bonds' carrying value","Expensed immediately","Recorded as a separate asset","Added to face value"],"They're presented like a discount and amortized into interest expense."],
+  ["Straight-line amortization of a bond discount is allowed when…",["The result isn't materially different from effective interest","The bonds are short-term","The company prefers it","The bonds sell at a premium"],"Effective interest is the required method; straight-line is a materiality exception."],
+  ["Bonds sold between interest dates are sold…",["Plus accrued interest since the last interest date","Minus accrued interest","At a discount to cover interest","With no interest adjustment"],"The buyer gets a full coupon on the next date, so they pay the accrued portion up front."],
+  ["Under the book value method, converting bonds into stock produces…",["No gain or loss","A gain if stock price exceeds par","A loss equal to the discount","A gain equal to the premium"],"The stock is recorded at the bonds' carrying value. (The market value method can produce a gain or loss.)"],
+  ["Interest expense on a premium bond, period by period…",["Decreases","Increases","Stays the same","Equals cash paid"],"Carrying value falls toward face, and expense is a percentage of carrying value."],
+ ]),
+];
+
+// ================= LEASES =================
+const ASSETS=["a delivery van","a CNC machine","office copiers","warehouse forklifts","medical imaging equipment","restaurant kitchen equipment"];
+function lS(due){const P=r(10000,80000,1000),n=pick([3,4,5,6,8]),rt=pick([5,6,7,8,9,10]),i=rt/100;
+  const fac=due?r4(1+(1-(1+i)**-(n-1))/i):r4((1-(1+i)**-n)/i);return{P,n,rt,fac,Lv:Math.round(P*fac)}}
+const lT=(co,s,due)=>`On January 1, ${co} leases ${pick(ASSETS)} for ${s.n} years. Annual payments of ${$(s.P)} are due ${due?"each January 1, starting today":"each December 31"}. ${co}'s incremental borrowing rate is ${s.rt}%; the implicit rate isn't known.`;
+function leaseClass(co){
+  const life=pick([8,10,12,15,20]),fv=r(100000,900000,10000),fin=Math.random()<.5,which=fin?pick(["own","opt","term","pv","spec"]):"";
+  const t=which==="term"?Math.min(life,Math.ceil(life*.75)+pick([0,1])):Math.max(2,Math.floor(life*pick([.3,.4,.5,.6])));
+  const pv=Math.round(fv*(which==="pv"?pick([.92,.95,.98]):pick([.55,.65,.72,.8,.85]))),tp=Math.round(t/life*100),pp=Math.round(pv/fv*100);
+  const tests=[["Ownership transfers to the lessee",which==="own"],["Purchase option the lessee is reasonably certain to exercise",which==="opt"],[`Lease term is a major part of economic life: ${t} ÷ ${life} = ${tp}%`,t/life>=.75],[`PV of payments is substantially all of fair value: $${f(pv)} ÷ $${f(fv)} = ${pp}%`,pv/fv>=.9],["Asset is so specialized the lessor has no other use for it",which==="spec"]];
+  return{kind:"mc",label:"Classify the lease",ans:fin?"Finance lease":"Operating lease",opts:["Finance lease","Operating lease"],
+   q:`${co} signs a lease:<ul><li>Lease term ${t} years; economic life ${life} years</li><li>PV of lease payments ${$(pv)}; fair value of the asset ${$(fv)}</li><li>${which==="own"?"Title transfers to "+co+" at the end":"Title stays with the lessor"}</li><li>${which==="opt"?"A bargain purchase option "+co+" is reasonably certain to exercise":"No purchase option"}</li><li>${which==="spec"?"Custom-built for "+co+"; the lessor has no other use for it":"Standard equipment the lessor can re-lease"}</li></ul>How does ${co} classify it?`,
+   w:tests.map(([d,m])=>`<b>${m?"Met":"Not met"}</b>: ${d}`).join("<br>")+`<br>${fin?"One test is met, so it's a finance lease.":"No test is met, so it's an operating lease."}`};
+}
+const LEASES=[
+ co=>{const s=lS(false);return{kind:"num",tol:1,t:`${lT(co,s,false)} PV of an ordinary annuity at ${s.rt}% for ${s.n} periods: <strong>${s.fac.toFixed(4)}</strong>. What lease liability does ${co} record at commencement?`,ans:s.Lv,
+  rows:[[`$${f(s.P)} × ${s.fac.toFixed(4)}`,s.Lv,"tot"]],w:"The lease liability is the PV of the lease payments. With no initial direct costs, prepayments or incentives, the ROU asset equals it."}},
+ co=>{const s=lS(true);return{kind:"je",t:`${lT(co,s,true)} PV of an annuity <em>due</em> at ${s.rt}% for ${s.n} periods: <strong>${s.fac.toFixed(4)}</strong>. It's a finance lease. Record commencement, including the first payment made today.`,
+  l:[L("Right-of-Use Asset",s.Lv),L("Lease Liability",0,s.Lv-s.P),L("Cash",0,s.P)],h:"Payments at the start of each year mean an annuity due, and the first payment is paid on day one.",
+  w:`PV = $${f(s.P)} × ${s.fac.toFixed(4)} = $${f(s.Lv)}. The ROU asset is the full PV; the first $${f(s.P)} is paid immediately, so the liability is only $${f(s.Lv-s.P)}. That payment is all principal: no interest has built up yet.`}},
+ co=>{const s=lS(false),i=Math.round(s.Lv*s.rt/100),am=Math.round(s.Lv/s.n),tot=i+am;
+  return{kind:"num",tol:2,t:`${lT(co,s,false)} It's a finance lease recorded at ${$(s.Lv)}; ownership doesn't transfer. What is ${co}'s <em>total</em> lease-related expense for year 1?`,ans:tot,
+  rows:[[`Interest ($${f(s.Lv)} × ${s.rt}%)`,i],[`ROU amortization ($${f(s.Lv)} ÷ ${s.n})`,am],["Total year-1 expense",tot,"tot"]],
+  w:`A finance lease shows two expenses: interest on the liability and straight-line amortization of the asset. Year 1 total ($${f(tot)}) is above the $${f(s.P)} payment because interest is front-loaded. An operating lease would show a flat $${f(s.P)}.`}},
+ co=>{const s=lS(false),i=Math.round(s.Lv*s.rt/100),end=s.Lv-(s.P-i);
+  return{kind:"num",tol:1,t:`${lT(co,s,false)} The lease liability was recorded at ${$(s.Lv)}. What is the liability balance right after the first December 31 payment?`,ans:end,
+  rows:[["Opening liability",s.Lv],[`Add: interest (× ${s.rt}%)`,i],["Less: payment",-s.P],["Ending liability",end,"tot"]],w:"Each payment covers that year's interest first; only the rest reduces principal."}},
+ co=>{const P1=r(10000,60000,1000),e=pick([1000,2000,3000]),n=pick([3,4,5]),pays=Array.from({length:n},(_,k)=>P1+k*e),tot=pays.reduce((a,b)=>a+b,0),ex=tot/n;
+  return{kind:"num",tol:1,t:`${co} signs a ${n}-year operating lease for office space. Annual payments rise each year: ${pays.map(p=>"$"+f(p)).join(", ")}. What lease cost does ${co} report in year 1?`,ans:ex,
+  rows:[["Total payments",tot],[`÷ ${n} years`,ex,"tot"]],w:"An operating lease reports one straight-line lease cost over the term, even when payments escalate."}},
+ co=>{const s=lS(false),idc=r(1000,8000,500),pre=pick([0,r(1000,10000,500)]),inc=pick([0,r(1000,10000,500)]),rou=s.Lv+idc+pre-inc;
+  return{kind:"num",tol:1,t:`${co} records a lease liability of ${$(s.Lv)}. It also paid ${$(idc)} of initial direct costs (broker commission)${pre?`, prepaid ${$(pre)} of rent before commencement`:""}${inc?`, and received a ${$(inc)} lease incentive from the lessor`:""}. What is the right-of-use asset?`,ans:rou,
+  rows:[["Lease liability",s.Lv],["Add: initial direct costs",idc],...(pre?[["Add: prepaid lease payments",pre]]:[]),...(inc?[["Less: lease incentives received",-inc]]:[]),["ROU asset",rou,"tot"]],
+  w:"ROU asset = lease liability + initial direct costs + prepaid payments − incentives received."}},
+ leaseClass,leaseClass,
+ mc([
+  ["Under ASC 842, which leases over 12 months go on the lessee's balance sheet?",["Both finance and operating leases","Only finance leases","Only operating leases","Neither"],"Both get an ROU asset and lease liability."],
+  ["A lessee may keep a lease off the balance sheet if its term is…",["12 months or less, with no purchase option it's reasonably certain to exercise","3 years or less","Less than 75% of the asset's life","Any length if payments are small"],"That's the short-term lease exemption."],
+  ["Payments under a finance lease are classified in the cash flow statement as…",["Principal in financing, interest in operating","All operating","All financing","All investing"],"Operating lease payments are all operating."],
+  ["Which is NOT one of the five finance lease tests?",["Payments are monthly","Ownership transfers","Reasonably certain purchase option","Specialized asset"],"Remember OWNES: Ownership, Written option, Ninety percent, Economic life, Specialized."],
+ ]),
+];
+
+// ================= CONTRIBUTED CAPITAL =================
+const CAP=[
+ co=>{const sh=r(1000,50000,500),par=pick([.01,.1,1,5,10]),p=par+r(5,60,1),cs=c2(sh*par),tot=c2(sh*p);
+  return{kind:"je",t:`${co} issues ${f(sh)} shares of $${par} par common stock for $${p} per share. Record the issuance.`,
+  l:[L("Cash",tot),L("Common Stock",0,cs),L("Additional Paid-in Capital—Common",0,c2(tot-cs))],h:"Common Stock only ever holds par.",w:`Par: ${f(sh)} × $${par} = $${f(cs)}. The rest of the $${f(tot)} goes to APIC.`}},
+ co=>{const sh=r(1000,30000,500),p=r(8,50,1);return{kind:"je",t:`${co} issues ${f(sh)} shares of <em>no-par</em> common stock with no stated value for $${p} per share. Record the issuance.`,
+  l:[L("Cash",sh*p),L("Common Stock",0,sh*p)],h:"With no par or stated value, there's nothing to split off into APIC.",w:`All $${f(sh*p)} goes to Common Stock. If the board set a stated value, it would be treated like par.`}},
+ co=>{const sh=r(1000,20000,500),par=pick([1,5,10]),p=par+r(5,40,1),ap=r(20000,600000,5000),v=sh*p;
+  return{kind:"je",t:`${co} issues ${f(sh)} shares of $${par} par common stock to acquire land. ${co}'s stock is actively traded at $${p} per share. A recent appraisal valued the land at ${$(ap)}. Record the purchase.`,
+  l:[L("Land",v),L("Common Stock",0,sh*par),L("Additional Paid-in Capital—Common",0,v-sh*par)],h:"Use whichever fair value is more clearly determinable.",
+  w:`An actively traded stock price is more reliable than an appraisal, so the land is recorded at ${f(sh)} × $${p} = $${f(v)}.`}},
+ co=>{const sh=r(500,10000,100),par=pick([25,50,100]),p=par+r(1,20,1);return{kind:"je",t:`${co} issues ${f(sh)} shares of $${par} par, 6% preferred stock at $${p} per share. Record the issuance.`,
+  l:[L("Cash",sh*p),L("Preferred Stock",0,sh*par),L("Additional Paid-in Capital—Preferred",0,sh*(p-par))],h:"Same as common: par to the stock account, the rest to its own APIC.",w:`Preferred Stock $${f(sh*par)}; APIC—Preferred $${f(sh*(p-par))}.`}},
+ co=>{const n=r(500,10000,100),c=r(10,60,1);return{kind:"je",t:`${co} buys back ${f(n)} of its own common shares for $${c} each and holds them in treasury (cost method). Record the purchase.`,
+  l:[L("Treasury Stock",n*c),L("Cash",0,n*c)],h:"Under the cost method, record treasury stock at what you paid.",w:`$${f(n*c)} goes to Treasury Stock, a contra-equity account. It isn't an asset.`}},
+ co=>{const n=r(1000,10000,100),c=r(10,50,1),k=Math.round(n*pick([.3,.4,.5,.6])/100)*100||100,q=c+r(1,15,1);
+  return{kind:"je",t:`${co} holds ${f(n)} treasury shares bought at $${c} each. It reissues ${f(k)} of them at $${q} per share. Record the reissue.`,
+  l:[L("Cash",k*q),L("Treasury Stock",0,k*c),L("Additional Paid-in Capital—Treasury Stock",0,k*(q-c))],h:"Remove the shares at cost. The excess isn't a gain.",
+  w:`Treasury Stock is credited at cost ($${f(k*c)}). The $${f(k*(q-c))} excess goes to APIC—Treasury Stock. Companies never report gains on deals in their own stock.`}},
+ co=>{const c=r(20,50,1),k=r(500,5000,100),q=c-r(2,8,1),sf=k*(c-q),bal=pick([0,Math.round(sf*pick([.3,.5])/100)*100,sf+r(500,5000,500)]),da=Math.min(bal,sf),dr=sf-da;
+  const l=[L("Cash",k*q)];if(da)l.push(L("Additional Paid-in Capital—Treasury Stock",da));if(dr)l.push(L("Retained Earnings",dr));l.push(L("Treasury Stock",0,k*c));
+  return{kind:"je",t:`${co} reissues ${f(k)} treasury shares, originally bought at $${c}, for $${q} each. APIC—Treasury Stock has a ${$(bal)} credit balance. Record the reissue.`,l,
+  h:"A shortfall uses up APIC from treasury stock first; anything left hits retained earnings.",
+  w:`Shortfall = ${f(k)} × ($${c} − $${q}) = $${f(sf)}. ${da?`$${f(da)} comes out of APIC—Treasury Stock`:"There's no APIC—Treasury Stock to absorb it"}${dr?`, and $${f(dr)} reduces retained earnings`:""}. Still no loss on the income statement.`}},
+ co=>{const n=r(5000,50000,1000),fvp=r(2,15,1),y=pick([2,3,4,5]),tot=n*fvp,ex=Math.round(tot/y);
+  return{kind:"je",t:`On January 1, ${co} grants ${f(n)} stock options to executives. Each option has a grant-date fair value of $${fvp}. The options vest after ${y} years of service. Record compensation expense for year 1.`,
+  l:[L("Compensation Expense",ex),L("Additional Paid-in Capital—Stock Options",0,ex)],h:"Total cost is fixed at the grant date and spread over the service (vesting) period.",
+  w:`Total cost = ${f(n)} × $${fvp} = $${f(tot)}, recognized over ${y} years: $${f(ex)} per year. Later changes in the stock price don't change it.`}},
+ mc([
+  ["Treasury stock is reported as…",["A reduction of stockholders' equity","An asset","A liability","Other income"],"It's contra-equity. A company can't own itself as an asset."],
+  ["When treasury stock is reissued above cost, the excess is…",["Credited to APIC—Treasury Stock","Reported as a gain","Credited to Retained Earnings","Credited to Common Stock"],"No gains or losses on transactions in a company's own stock."],
+  ["Cumulative preferred stock means…",["Unpaid dividends from past years must be paid before common gets any","It shares extra dividends with common","It can be converted into common","It has voting rights"],"Unpaid cumulative dividends are 'in arrears.' They're disclosed, not recorded as a liability, until declared."],
+  ["Dividends in arrears on cumulative preferred stock are…",["Disclosed in the notes, not recorded as a liability","Recorded as Dividends Payable","Ignored entirely","Expensed"],"They become a liability only when the board declares them."],
+  ["Stock options granted to employees are measured at…",["Fair value on the grant date","Intrinsic value on the vesting date","Market price when exercised","Zero until exercised"],"Grant-date fair value, expensed over the service period."],
+ ]),
+];
+
+// ================= DIVIDENDS & RETAINED EARNINGS =================
+const RE=[
+ co=>{const I=r(50000,500000,1000),T=r(1000,Math.round(I*.2),500),d=pick([.25,.4,.5,.75,1,1.2,1.5,2]),o=I-T,a=c2(o*d);
+  return{kind:"je",t:`${co} has ${f(I)} common shares issued and ${f(T)} held in treasury. The board declares a cash dividend of $${d.toFixed(2)} per share. Record the declaration.`,
+  l:[L("Retained Earnings",a),L("Dividends Payable",0,a)],h:"Treasury shares don't get dividends.",w:`Outstanding = ${f(I)} − ${f(T)} = ${f(o)} shares × $${d.toFixed(2)} = $${f(a)}. The liability arises on the declaration date; the record date needs no entry.`}},
+ co=>{const o=r(20000,400000,1000),par=pick([1,5,10]),v=par+r(5,40,1),p=pick([5,10,15]),sh=Math.round(o*p/100),re=sh*v;
+  return{kind:"je",t:`${co} has ${f(o)} shares of $${par} par common stock outstanding, trading at $${v}. It declares a ${p}% stock dividend. Record the declaration.`,
+  l:[L("Retained Earnings",re),L("Common Stock Dividend Distributable",0,sh*par),L("Additional Paid-in Capital—Common",0,sh*(v-par))],h:"A small stock dividend (under 20–25%) is recorded at market value.",
+  w:`New shares = ${f(o)} × ${p}% = ${f(sh)}. At $${v} fair value: $${f(re)} out of retained earnings, $${f(sh*par)} par to Common Stock Dividend Distributable (an equity account, not a liability), and the rest to APIC.`}},
+ co=>{const o=r(20000,400000,1000),par=pick([1,5,10]),v=par+r(5,40,1),p=pick([30,40,50,100]),sh=Math.round(o*p/100);
+  return{kind:"je",t:`${co} has ${f(o)} shares of $${par} par common stock outstanding, trading at $${v}. It declares a ${p}% stock dividend. Record the declaration.`,
+  l:[L("Retained Earnings",sh*par),L("Common Stock Dividend Distributable",0,sh*par)],h:"A large stock dividend (over 20–25%) is recorded at par.",
+  w:`${f(sh)} new shares × $${par} par = $${f(sh*par)}. Large stock dividends behave like splits, so market value isn't used.`}},
+ co=>{const cv=r(20000,300000,1000),fv=cv+pick([-1,1])*r(2000,60000,1000),ask=pick(["re","gl"]),gl=fv-cv;
+  return{kind:"num",tol:1,t:`${co} declares a property dividend: shares of another company it holds as an investment. The investment's carrying value is ${$(cv)} and its fair value is ${$(fv)}. ${ask==="re"?"By how much does retained earnings decrease from the dividend itself?":"What gain or loss does "+co+" recognize? (Enter a loss as a negative number.)"}`,ans:ask==="re"?fv:gl,
+  rows:[["Fair value",fv],["Carrying value",-cv],[`${gl>=0?"Gain":"Loss"} on remeasurement`,gl,ask==="gl"?"tot":""],["Retained earnings reduction (at fair value)",fv,ask==="re"?"tot":""]],
+  w:"First remeasure the asset to fair value, booking a gain or loss. Then record the dividend at fair value: debit Retained Earnings, credit Property Dividends Payable."}},
+ co=>{const PP=r(100000,1000000,50000),pr=pick([4,5,6,7,8]),cum=Math.random()<.7,k=cum?pick([1,2]):0,pd=PP*pr/100,need=cum?(k+1)*pd:pd,D=need+r(10000,200000,5000),ask=pick(["pref","com"]);
+  return{kind:"num",tol:1,t:`${co} has ${$(PP)} of ${pr}% ${cum?"cumulative":"noncumulative"} preferred stock and common stock outstanding. ${cum?`Preferred dividends are ${k} year${k>1?"s":""} in arrears.`:"No preferred dividends were declared last year."} This year the board declares ${$(D)} of dividends. How much goes to <em>${ask==="pref"?"preferred":"common"}</em> shareholders?`,ans:ask==="pref"?need:D-need,
+  rows:[[`Annual preferred dividend (${f(PP)} × ${pr}%)`,pd],...(cum?[[`Arrears (${k} year${k>1?"s":""})`,k*pd]]:[]),["To preferred",need,ask==="pref"?"tot":""],["Total declared",D],["To common (the rest)",D-need,ask==="com"?"tot":""]],
+  w:cum?"Cumulative preferred gets all arrears plus the current year before common gets anything.":"Noncumulative preferred loses any year that wasn't declared, so it only gets the current year."}},
+ co=>{const b=r(200000,2000000,10000),ni=pick([1,1,1,-1])*r(50000,500000,5000),cd=r(10000,150000,5000),sd=pick([0,r(20000,200000,5000)]),pa=pick([0,0,r(5000,60000,1000)]),pas=pick([1,-1]),end=b+pas*pa+ni-cd-sd;
+  return{kind:"num",tol:1,t:`${co}'s retained earnings were ${$(b)} at the start of the year. ${pa?`It discovered an error in prior-year depreciation that ${pas>0?"understated":"overstated"} last year's net income by ${$(pa)} after tax. `:""}This year's net ${ni<0?"loss":"income"} was ${$(Math.abs(ni))}. It declared ${$(cd)} of cash dividends${sd?` and a small stock dividend valued at ${$(sd)}`:""}. What is ending retained earnings?`,ans:end,
+  rows:[["Beginning retained earnings",b],...(pa?[["Prior-period adjustment (net of tax)",pas*pa],["Adjusted beginning balance",b+pas*pa]]:[]),[`Net ${ni<0?"loss":"income"}`,ni],["Cash dividends",-cd],...(sd?[["Stock dividend",-sd]]:[]),["Ending retained earnings",end,"tot"]],
+  w:"Error corrections are prior-period adjustments to beginning retained earnings, net of tax. They never run through this year's income."}},
+ mc([
+  ["A 2-for-1 stock split requires…",["No journal entry, only a memo","A debit to Retained Earnings at market value","A debit to Retained Earnings at par","A debit to APIC"],"Shares double and par halves; no account balance changes."],
+  ["A small stock dividend affects total stockholders' equity by…",["Not changing it","Decreasing it by the market value","Increasing it","Decreasing it by par"],"It only moves amounts from retained earnings to paid-in capital."],
+  ["Common Stock Dividend Distributable is reported as…",["Part of equity (paid-in capital)","A current liability","A long-term liability","An asset"],"A company never owes cash or assets on a stock dividend, so it's not a liability."],
+  ["On which date is a cash dividend recorded as a liability?",["Declaration date","Record date","Payment date","Ex-dividend date"],"The board's declaration creates the legal obligation."],
+  ["Correcting a material error in last year's financial statements is reported as…",["An adjustment to beginning retained earnings, net of tax","Other income this year","A change in estimate","Ignored if it was last year"],"It's a prior-period adjustment, and prior statements shown are restated."],
+ ]),
+];
+
+// ================= EPS =================
+const ENOTE={note:"Round to the nearest cent."};
+const SHNOTE={unit:"sh",note:"Enter a number of shares."};
+const EPS=[
+ co=>{const s0=r(60000,600000,12000),a=r(1200,120000,1200),b=r(1200,60000,1200),m1=pick([2,3,4,5]),m2=pick([7,8,9,10]),w1=a*(12-m1)/12,w2=b*(12-m2)/12,ws=s0+w1-w2;
+  return{...SHNOTE,kind:"num",tol:1,t:`${co} had ${f(s0)} common shares outstanding on January 1. On ${MON[m1]} 1 it issued ${f(a)} new shares, and on ${MON[m2]} 1 it bought back ${f(b)} shares as treasury stock. What is the weighted-average number of shares for the year?`,ans:ws,
+  rows:[["January 1 shares × 12/12",s0],[`Issued ${MON[m1]} 1: ${f(a)} × ${12-m1}/12`,w1],[`Treasury purchase ${MON[m2]} 1: ${f(b)} × ${12-m2}/12`,-w2],["Weighted-average shares",ws,"tot"]],
+  w:"Weight each change by the fraction of the year the shares were outstanding."}},
+ co=>{const s0=r(60000,600000,12000),a=r(1200,120000,1200),m1=pick([2,3,4,5]),m2=pick([7,8,9,10]),k=pick([2,3]),ws=(s0+a*(12-m1)/12)*k;
+  return{...SHNOTE,kind:"num",tol:1,t:`${co} had ${f(s0)} common shares outstanding on January 1. On ${MON[m1]} 1 it issued ${f(a)} new shares. On ${MON[m2]} 1 it had a ${k}-for-1 stock split. What is the weighted-average number of shares for the year?`,ans:ws,
+  rows:[["January 1 shares",s0],[`Issued ${MON[m1]} 1: ${f(a)} × ${12-m1}/12`,a*(12-m1)/12],["Weighted before the split",s0+a*(12-m1)/12],[`× ${k} (split applied retroactively)`,ws,"tot"]],
+  w:"Splits and stock dividends are treated as if they happened at the start of the year (and restated in prior years), because they don't bring in any resources. Don't weight them by date."}},
+ co=>{const ni=r(200000,3000000,10000),PP=r(200000,2000000,100000),pr=pick([5,6,7,8]),cum=Math.random()<.6,dec=Math.random()<.5,pd=PP*pr/100,sub=cum||dec?pd:0,ws=r(50000,500000,5000),e=c2((ni-sub)/ws);
+  return{...ENOTE,kind:"num",tol:.011,t:`${co} reports net income of ${$(ni)} and has ${$(PP)} of ${pr}% ${cum?"cumulative":"noncumulative"} preferred stock. ${dec?"The board declared this year's preferred dividend.":"No preferred dividends were declared this year."} Weighted-average common shares: ${f(ws)}. What is basic EPS?`,ans:e,
+  rows:[["Net income",ni],[`Less: preferred dividends${sub?"":" (none: noncumulative and undeclared)"}`,-sub],["Income available to common",ni-sub],[`÷ ${f(ws)} shares`,e,"tot"]],
+  w:"Subtract the current year's preferred dividend if it's cumulative (declared or not) or if it was declared. Arrears from earlier years are never subtracted again."}},
+ co=>{const ni=r(500000,5000000,10000),ws=r(100000,1000000,10000),N=r(5000,60000,1000),X=r(10,40,1),M=X+r(4,30,1),inc=Math.round(N-N*X/M),b=c2(ni/ws),d=c2(ni/(ws+inc));
+  return{...ENOTE,kind:"num",tol:.011,t:`${co} has net income of ${$(ni)}, no preferred stock, and ${f(ws)} weighted-average common shares. ${f(N)} stock options are outstanding all year with an exercise price of $${X}. The average market price was $${M}. What is diluted EPS?`,ans:d,
+  rows:[["Basic EPS (for comparison)",b],[`Shares from exercise`,N],[`Shares repurchased: ${f(N)} × $${X} ÷ $${M}`,-Math.round(N*X/M)],["Incremental shares",inc],[`Diluted: ${f(ni)} ÷ ${f(ws+inc)}`,d,"tot"]],
+  w:"Treasury stock method: assume exercise, and assume the cash received buys back shares at the average market price. Options are dilutive only when they're in the money (market > exercise)."}},
+ co=>{const ni=r(300000,3000000,10000),ws=r(100000,1000000,10000),F=pick([500000,1000000,2000000]),cr=pick([5,6,7,8]),t=pick([21,25]),per=pick([20,25,30,40,50]),sh=F/1000*per,ai=Math.round(F*cr/100*(1-t/100)),b=c2(ni/ws),inc=ai/sh,dil=inc<b,d=dil?c2((ni+ai)/(ws+sh)):b;
+  return{...ENOTE,kind:"num",tol:.011,t:`${co} has net income of ${$(ni)}, no preferred stock, and ${f(ws)} weighted-average common shares. ${$(F)} of ${cr}% convertible bonds were outstanding all year (issued at face); each $1,000 bond converts into ${per} shares. The tax rate is ${t}%. What is diluted EPS?`,ans:d,
+  rows:[["Basic EPS",b],[`Interest saved, after tax: ${f(F)} × ${cr}% × (1 − ${t}%)`,ai],[`Shares on conversion: ${F/1000} × ${per}`,sh],[`Incremental EPS: ${f(ai)} ÷ ${f(sh)}`,c2(inc)],[dil?`Diluted: (${f(ni)} + ${f(ai)}) ÷ ${f(ws+sh)}`:"Antidilutive, so diluted EPS = basic",d,"tot"]],
+  w:dil?"If-converted method: add back after-tax interest to the numerator and the conversion shares to the denominator.":`The bonds' incremental EPS ($${c2(inc).toFixed(2)}) is above basic EPS, so including them would <em>raise</em> EPS. Antidilutive securities are left out, and diluted EPS equals basic.`}},
+ mc([
+  ["When computing weighted-average shares, a stock dividend issued in October is…",["Applied retroactively to the start of the year","Weighted for 3 months","Ignored","Weighted for 9 months"],"Stock dividends and splits don't bring in resources, so they're treated as outstanding all period."],
+  ["Under the treasury stock method, options are dilutive when…",["The average market price is above the exercise price","The exercise price is above market","They are out of the money","They vest this year"],"In-the-money options add net shares."],
+  ["A security is antidilutive when including it would…",["Increase EPS (or decrease a loss per share)","Decrease EPS","Leave EPS unchanged","Increase shares outstanding"],"Antidilutive securities are excluded from diluted EPS."],
+  ["With a net loss from continuing operations, potential common shares are…",["Excluded, since they'd be antidilutive","Always included","Included only if options","Doubled"],"Adding shares to a loss makes the loss per share smaller, which is antidilutive."],
+  ["Which companies must report EPS on the face of the income statement?",["Public companies","All companies","Only companies with preferred stock","Only companies with convertibles"],"Private companies aren't required to present EPS."],
+ ]),
+];
+return {cl:CL,bonds:BONDS,leases:LEASES,cap:CAP,re:RE,eps:EPS};
+})();
+const CFG=(()=>{
+// ---------- Helpers ----------
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const r=(min,max,step)=>Math.round((min+Math.random()*(max-min))/step)*step||step;
+const f=n=>Math.abs(n).toLocaleString("en-US",{maximumFractionDigits:2});
+const fm=n=>n<0?`(${f(n)})`:f(n);
+const $=n=>`<strong>$${f(n)}</strong>`;
+const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const L=(a,d,c)=>[a,d||0,c||0];
+const ansTxt=q=>q.unit==="sh"?`${f(q.ans)} shares`:`$${fm(q.ans)}`;
+const sgn=n=>Math.random()<.5?n:-n;
+const COS=["Harbor Lane Bikes","Northgate Tutoring","Pine Hollow Landscaping","Bluebird Print Shop","Summit Tech Repair","Atlas Moving Co.","Maple Street Dental Lab","Ridgeview Photo Studio","Riverbend Pool Service","Cobalt Coworking","Granite Peak Outfitters","Lumen Software"];
+const TOPICS={cls:"Classification",ind:"Indirect method",dir:"Direct method",stmt:"Full statement",rev:"Revenue: 5 steps",rev2:"Revenue: special cases"};
+const mc=list=>()=>{const c=pick(list);return{kind:"mc",q:c[0],ans:c[1][0],opts:shuffle(c[1]),w:c[2]}};
+
+// ================= CLASSIFICATION =================
+const O="Operating activity",I="Investing activity",F="Financing activity",N="Noncash, disclosed separately";
+const CLS=[
+ ["Interest paid on a bank loan",O,"US GAAP puts interest paid in operating because interest expense is part of net income. (IFRS lets companies choose.)"],
+ ["Interest received on a note receivable",O,"Interest income is in net income, so it's operating."],
+ ["Dividends received from an investment in another company's stock",O,"Dividend income is in net income, so it's operating."],
+ ["Dividends paid to the company's own shareholders",F,"Paying owners is a financing activity. Dividends paid never appear in operating."],
+ ["Purchase of new equipment for cash",I,"Buying long-term productive assets is investing."],
+ ["Cash received from selling an old delivery truck",I,"Proceeds from selling long-term assets are investing. Any gain or loss is backed out of operating."],
+ ["Cash received from issuing bonds",F,"Borrowing is financing."],
+ ["Repayment of the principal on a bank loan",F,"Repaying borrowings is financing. (The interest part is operating.)"],
+ ["Buying back the company's own shares as treasury stock",F,"Transactions with owners are financing."],
+ ["Issuing common stock for cash",F,"Raising capital from owners is financing."],
+ ["Buying another company's bonds as an available-for-sale investment",I,"Investments not held for trading are investing."],
+ ["Lending money to another company",I,"Making loans is investing."],
+ ["Collecting the principal on a loan the company made",I,"Collecting loan principal is investing. Interest collected is operating."],
+ ["Buying trading securities held for sale in the near term",O,"Cash flows from trading securities are classified by their nature, which is usually operating."],
+ ["Paying income taxes",O,"Income taxes are operating, even taxes on a gain from selling equipment."],
+ ["Paying suppliers for inventory",O,"Day-to-day operations."],
+ ["The principal portion of a finance lease payment",F,"Like repaying a loan. The interest portion is operating."],
+ ["Payments on an operating lease",O,"Operating lease payments are operating in full."],
+ ["Converting bonds payable into common stock",N,"No cash changes hands, so it's disclosed as a noncash investing and financing activity."],
+ ["Acquiring land by signing a long-term note payable",N,"No cash moves. Disclose it separately."],
+ ["Commencing a finance lease (recording the ROU asset and liability)",N,"No cash at commencement. Disclose it separately."],
+ ["Paying debt issuance costs",F,"Under ASU 2016-15, debt issue costs are financing."],
+ ["Insurance proceeds for a building destroyed by fire",I,"Insurance proceeds are classified by the nature of the loss. A building is a long-term asset, so investing."],
+ ["The part of a zero-coupon bond repayment that represents accreted interest",O,"ASU 2016-15: the interest portion of a zero-coupon bond payment is operating; the original principal is financing."],
+];
+const clsQ=()=>{const c=pick(CLS);return{kind:"mc",label:"Classify the cash flow",q:`Under US GAAP, how is this reported in the statement of cash flows?<ul><li>${c[0]}</li></ul>`,ans:c[1],opts:[O,I,F,N],w:c[2]}};
+const CLSG=[clsQ,clsQ,clsQ,clsQ,mc([
+ ["Under US GAAP, the statement of cash flows reconciles…",["Beginning and ending cash and cash equivalents","Net income and taxable income","Beginning and ending retained earnings","Assets and liabilities"],"It explains the change in cash and cash equivalents (and restricted cash) for the period."],
+ ["Which item counts as a cash equivalent?",["A 3-month Treasury bill bought 2 months before maturity","A 6-month CD bought at issuance","Common stock of a large company","A 1-year Treasury note bought at issuance"],"Cash equivalents have an original maturity to the holder of 3 months or less."],
+ ["Under IFRS, interest paid may be classified as…",["Operating or financing","Only operating","Only investing","Only financing"],"US GAAP requires operating. IFRS allows a choice, applied consistently."],
+])];
+
+// ================= INDIRECT METHOD =================
+const ADJ=[
+ ["Depreciation expense","Added to net income","A noncash expense reduced net income but used no cash."],
+ ["Amortization of a patent","Added to net income","Noncash expense."],
+ ["Impairment loss on goodwill","Added to net income","Noncash loss."],
+ ["Gain on sale of equipment","Subtracted from net income","The cash from the sale is in investing; leaving the gain in operating would count it twice."],
+ ["Loss on sale of equipment","Added to net income","The loss reduced net income but isn't an operating cash outflow."],
+ ["Increase in accounts receivable","Subtracted from net income","Sales were recorded that haven't been collected yet."],
+ ["Decrease in inventory","Added to net income","Inventory sold this year was paid for earlier, so COGS overstates cash paid."],
+ ["Increase in prepaid expenses","Subtracted from net income","Cash went out for expenses not recorded yet."],
+ ["Increase in accounts payable","Added to net income","Expenses were recorded but not yet paid."],
+ ["Decrease in wages payable","Subtracted from net income","More cash was paid than this year's expense."],
+ ["Increase in unearned revenue","Added to net income","Cash came in before the revenue was earned."],
+ ["Amortization of a discount on bonds payable","Added to net income","Interest expense includes a noncash part: the discount amortization."],
+ ["Amortization of a premium on bonds payable","Subtracted from net income","Cash interest paid exceeds interest expense."],
+ ["Increase in a deferred tax liability","Added to net income","Part of tax expense wasn't paid in cash this year."],
+ ["Equity-method income in excess of dividends received","Subtracted from net income","Only the dividends are cash; the rest of the investee income is noncash."],
+ ["Purchase of equipment","Not an operating adjustment","It's an investing outflow."],
+ ["Dividends paid","Not an operating adjustment","It's a financing outflow and was never in net income."],
+];
+const IND=[
+ co=>{const ni=r(40000,600000,1000),dep=r(5000,90000,1000),g=sgn(r(1000,20000,500)),ar=sgn(r(1000,40000,500)),inv=sgn(r(1000,40000,500)),pp=sgn(r(500,8000,500)),ap=sgn(r(1000,30000,500)),acc=sgn(r(500,10000,500)),cfo=ni+dep-g-ar-inv-pp+ap+acc;
+  return{kind:"num",tol:1,t:`${co} reports net income of ${$(ni)} for the year. Other information:<ul><li>Depreciation expense: $${f(dep)}</li><li>${g>0?"Gain":"Loss"} on sale of equipment: $${f(g)}</li><li>Accounts receivable ${ar>0?"increased":"decreased"} by $${f(ar)}</li><li>Inventory ${inv>0?"increased":"decreased"} by $${f(inv)}</li><li>Prepaid expenses ${pp>0?"increased":"decreased"} by $${f(pp)}</li><li>Accounts payable ${ap>0?"increased":"decreased"} by $${f(ap)}</li><li>Accrued liabilities ${acc>0?"increased":"decreased"} by $${f(acc)}</li></ul>What is net cash provided by operating activities?`,ans:cfo,
+  rows:[["Net income",ni],["Depreciation",dep],[g>0?"Gain on sale":"Loss on sale",-g],["Accounts receivable",-ar],["Inventory",-inv],["Prepaid expenses",-pp],["Accounts payable",ap],["Accrued liabilities",acc],["Net cash from operating activities",cfo,"tot"]],
+  w:"Start with net income. Add back noncash expenses and losses, subtract gains. Then: an <b>increase</b> in a current asset is subtracted, an <b>increase</b> in a current liability is added (and the reverse for decreases)."}},
+ co=>{const ni=r(100000,800000,1000),dep=r(10000,90000,1000),da=r(1000,8000,100),prem=Math.random()<.5,ei=r(10000,80000,1000),dv=r(1000,Math.round(ei*.7),500),dtl=sgn(r(1000,15000,500)),cfo=ni+dep+(prem?-da:da)-ei+dv+dtl;
+  return{kind:"num",tol:1,t:`${co} reports net income of ${$(ni)}. It includes:<ul><li>Depreciation: $${f(dep)}</li><li>Amortization of ${prem?"premium":"discount"} on bonds payable: $${f(da)}</li><li>Equity-method income from an investee: $${f(ei)}; ${co} received $${f(dv)} of dividends from the investee</li><li>The deferred tax liability ${dtl>0?"increased":"decreased"} by $${f(dtl)}</li></ul>No working-capital accounts changed. What is cash from operating activities?`,ans:cfo,
+  rows:[["Net income",ni],["Depreciation",dep],[`Bond ${prem?"premium":"discount"} amortization`,prem?-da:da],["Equity-method income",-ei],["Dividends from investee",dv],["Change in deferred tax liability",dtl],["Cash from operating activities",cfo,"tot"]],
+  w:`A ${prem?"premium means cash interest is more than expense, so subtract":"discount means expense is more than cash interest, so add back"} the amortization. Equity-method income is replaced by the cash dividends actually received. A rising DTL means tax expense exceeded taxes paid.`}},
+ co=>{const c=r(20000,200000,1000),a=r(5000,Math.round(c*.8),1000),bv=c-a,p=Math.max(500,bv+sgn(r(1000,20000,500))),gl=p-bv,ask=pick(["cfi","adj"]);
+  return{kind:"num",tol:1,t:`${co} sells equipment that cost ${$(c)}, with accumulated depreciation of ${$(a)}, for ${$(p)} cash. ${ask==="cfi"?"How much is reported as a cash inflow in <em>investing</em> activities?":"Under the indirect method, what adjustment to net income is made in <em>operating</em> activities? (Enter a subtraction as a negative number.)"}`,ans:ask==="cfi"?p:-gl,
+  rows:[["Cost",c],["Accumulated depreciation",-a],["Book value",bv],["Cash received",p],[gl>=0?"Gain":"Loss",gl],[ask==="cfi"?"Investing inflow (cash received)":`Operating adjustment (${gl>=0?"subtract the gain":"add back the loss"})`,ask==="cfi"?p:-gl,"tot"]],
+  w:"The full cash proceeds go in investing. The gain or loss is backed out of operating so the sale isn't counted twice."}},
+ ()=>{const c=pick(ADJ);return{kind:"mc",label:"Indirect-method adjustment",q:`Under the indirect method, how does this item appear in operating activities?<ul><li>${c[0]}</li></ul>`,ans:c[1],opts:["Added to net income","Subtracted from net income","Not an operating adjustment"],w:c[2]}},
+ ()=>{const c=pick(ADJ);return{kind:"mc",label:"Indirect-method adjustment",q:`Under the indirect method, how does this item appear in operating activities?<ul><li>${c[0]}</li></ul>`,ans:c[1],opts:["Added to net income","Subtracted from net income","Not an operating adjustment"],w:c[2]}},
+];
+
+// ================= DIRECT METHOD =================
+const DIR=[
+ co=>{const s=r(200000,3000000,10000),ar=sgn(r(5000,80000,1000)),ur=Math.random()<.5?sgn(r(2000,30000,1000)):0,cc=s-ar+ur;
+  return{kind:"num",tol:1,t:`${co} reports sales of ${$(s)}. Accounts receivable ${ar>0?"increased":"decreased"} by ${$(Math.abs(ar))}${ur?` and unearned revenue ${ur>0?"increased":"decreased"} by ${$(Math.abs(ur))}`:""}. Under the direct method, how much cash was collected from customers?`,ans:cc,
+  rows:[["Sales",s],[`${ar>0?"Less: increase":"Add: decrease"} in accounts receivable`,-ar],...(ur?[[`${ur>0?"Add: increase":"Less: decrease"} in unearned revenue`,ur]]:[]),["Cash collected from customers",cc,"tot"]],
+  w:"A growing receivable means some sales weren't collected. Growing unearned revenue means customers paid before the sale was recorded."}},
+ co=>{const cg=r(150000,2000000,10000),inv=sgn(r(5000,60000,1000)),ap=sgn(r(5000,60000,1000)),cp=cg+inv-ap;
+  return{kind:"num",tol:1,t:`${co} reports cost of goods sold of ${$(cg)}. Inventory ${inv>0?"increased":"decreased"} by ${$(Math.abs(inv))} and accounts payable ${ap>0?"increased":"decreased"} by ${$(Math.abs(ap))}. How much cash was paid to suppliers?`,ans:cp,
+  rows:[["Cost of goods sold",cg],[`${inv>0?"Add: increase":"Less: decrease"} in inventory`,inv],["= Purchases",cg+inv],[`${ap>0?"Less: increase":"Add: decrease"} in accounts payable`,-ap],["Cash paid to suppliers",cp,"tot"]],
+  w:"Two steps: COGS ± inventory change gives purchases; purchases ∓ accounts payable change gives cash paid."}},
+ co=>{const e=r(50000,800000,5000),wp=sgn(r(1000,30000,500)),pp=sgn(r(500,15000,500)),cp=e-wp+pp;
+  return{kind:"num",tol:1,t:`${co} reports operating expenses (other than depreciation) of ${$(e)}. Accrued expenses payable ${wp>0?"increased":"decreased"} by ${$(Math.abs(wp))} and prepaid expenses ${pp>0?"increased":"decreased"} by ${$(Math.abs(pp))}. How much cash was paid for operating expenses?`,ans:cp,
+  rows:[["Operating expenses",e],[`${wp>0?"Less: increase":"Add: decrease"} in accrued expenses`,-wp],[`${pp>0?"Add: increase":"Less: decrease"} in prepaid expenses`,pp],["Cash paid",cp,"tot"]],
+  w:"Unpaid accruals mean less cash went out than the expense. Bigger prepaids mean more cash went out. Depreciation is excluded because it's never cash."}},
+ co=>{const ie=r(20000,300000,1000),da=r(1000,10000,500),ip=sgn(r(1000,15000,500)),cp=ie-da-ip;
+  return{kind:"num",tol:1,t:`${co} reports interest expense of ${$(ie)}, which includes ${$(da)} of bond discount amortization. Interest payable ${ip>0?"increased":"decreased"} by ${$(Math.abs(ip))}. How much cash was paid for interest?`,ans:cp,
+  rows:[["Interest expense",ie],["Less: discount amortization (noncash)",-da],[`${ip>0?"Less: increase":"Add: decrease"} in interest payable`,-ip],["Cash paid for interest",cp,"tot"]],
+  w:"Strip out the noncash part of interest expense, then adjust for the change in what's still owed."}},
+ co=>{const te=r(20000,400000,1000),tp=sgn(r(1000,20000,500)),dtl=sgn(r(1000,20000,500)),cp=te-tp-dtl;
+  return{kind:"num",tol:1,t:`${co} reports income tax expense of ${$(te)}. Income taxes payable ${tp>0?"increased":"decreased"} by ${$(Math.abs(tp))} and the deferred tax liability ${dtl>0?"increased":"decreased"} by ${$(Math.abs(dtl))}. How much cash was paid for income taxes?`,ans:cp,
+  rows:[["Income tax expense",te],[`${tp>0?"Less: increase":"Add: decrease"} in taxes payable`,-tp],[`${dtl>0?"Less: increase":"Add: decrease"} in deferred tax liability`,-dtl],["Cash paid for taxes",cp,"tot"]],
+  w:"Both a rising taxes payable and a rising DTL mean part of the expense wasn't paid in cash this year."}},
+ mc([
+  ["A company that uses the direct method must also…",["Provide a reconciliation of net income to operating cash flow","Present a second balance sheet","Use the indirect method for investing activities","Skip the noncash disclosure"],"The indirect-method reconciliation is still required, in a separate schedule."],
+  ["Which method does the FASB encourage?",["Direct method","Indirect method","Neither","Both are prohibited for public companies"],"Encouraged, but most companies still use the indirect method."],
+  ["Under the direct method, depreciation…",["Doesn't appear in operating activities","Is added back","Is subtracted","Is shown in investing"],"The direct method lists only cash receipts and payments, so noncash items never show up."],
+ ]),
+];
+
+// ================= FULL STATEMENT BUILDER =================
+function stmt(co){
+  const ni=r(60000,400000,1000),dep=r(10000,80000,1000),c=r(20000,120000,1000),a=r(5000,Math.round(c*.8),1000),bv=c-a,p=Math.max(1000,bv+sgn(r(1000,15000,500))),g=p-bv,buy=r(30000,250000,1000);
+  const E0=r(300000,900000,10000),A0=r(80000,250000,5000),E1=E0+buy-c,A1=A0+dep-a;
+  const AR0=r(30000,150000,1000),AR1=AR0+sgn(r(2000,30000,1000)),IN0=r(30000,200000,1000),IN1=IN0+sgn(r(2000,30000,1000)),AP0=r(20000,120000,1000),AP1=AP0+sgn(r(2000,25000,1000));
+  const NP0=r(50000,300000,5000),ni_=pick([0,r(20000,150000,5000)]),nr=r(10000,Math.min(80000,NP0),5000),NP1=NP0+ni_-nr;
+  const CS0=r(200000,600000,10000),cs=pick([0,r(20000,150000,5000)]),CS1=CS0+cs,dv=r(10000,Math.round(ni*.6),1000);
+  const cfo=ni+dep-g-(AR1-AR0)-(IN1-IN0)+(AP1-AP0),cfi=p-buy,cff=ni_-nr+cs-dv,net=cfo+cfi+cff;
+  const C0=r(80000,300000,1000)+Math.max(0,-net),C1=C0+net,RE0=r(100000,500000,5000),RE1=RE0+ni-dv;
+  const ask=pick(["cfo","cfi","cff","net"]),lab={cfo:"net cash from operating activities",cfi:"net cash from investing activities",cff:"net cash from financing activities",net:"net change in cash"}[ask];
+  const tr=(n,x,y,contra)=>`<tr><td style="text-align:left">${n}</td><td>${contra?"(":""}${f(x)}${contra?")":""}</td><td>${contra?"(":""}${f(y)}${contra?")":""}</td></tr>`;
+  const bs=`<div class="tw"><table class="fac"><thead><tr><th>Balance sheet</th><th>Jan 1</th><th>Dec 31</th></tr></thead><tbody>${tr("Cash",C0,C1)}${tr("Accounts receivable",AR0,AR1)}${tr("Inventory",IN0,IN1)}${tr("Equipment",E0,E1)}${tr("Accumulated depreciation",A0,A1,1)}${tr("Accounts payable",AP0,AP1)}${tr("Notes payable",NP0,NP1)}${tr("Common stock",CS0,CS1)}${tr("Retained earnings",RE0,RE1)}</tbody></table></div>`;
+  const all=[["<b>Operating</b>",null],["Net income",ni],["Depreciation",dep],[g>=0?"Gain on sale of equipment":"Loss on sale of equipment",-g],["Change in accounts receivable",-(AR1-AR0)],["Change in inventory",-(IN1-IN0)],["Change in accounts payable",AP1-AP0],["Net cash from operating",cfo,ask==="cfo"?"tot":""],
+    ["<b>Investing</b>",null],["Sale of equipment",p],["Purchase of equipment",-buy],["Net cash from investing",cfi,ask==="cfi"?"tot":""],
+    ["<b>Financing</b>",null],...(ni_?[["Notes issued",ni_]]:[]),["Notes repaid",-nr],...(cs?[["Stock issued",cs]]:[]),["Dividends paid",-dv],["Net cash from financing",cff,ask==="cff"?"tot":""],["Net change in cash",net,ask==="net"?"tot":""]];
+  const rows=all.filter(x=>x[1]!==null);
+  return{kind:"num",tol:2,t:`${co}'s comparative balance sheet:${bs}Additional information for the year:<ul><li>Net income was $${f(ni)}, including depreciation of $${f(dep)}.</li><li>Equipment costing $${f(c)} with accumulated depreciation of $${f(a)} was sold for $${f(p)} cash.</li><li>New equipment was bought for $${f(buy)} cash.</li><li>${ni_?`Notes of $${f(ni_)} were issued and `:""}$${f(nr)} of notes were repaid.</li>${cs?`<li>Common stock was issued for $${f(cs)} cash.</li>`:""}<li>Cash dividends of $${f(dv)} were paid.</li></ul>Using the indirect method, what is <em>${lab}</em>?`,ans:{cfo,cfi,cff,net}[ask],
+    rows,w:`Work it the way you'd build the statement: operating from net income and the working-capital changes, investing from equipment activity, financing from notes, stock and dividends. Check: the three sections should total the $${f(net)} change in cash on the balance sheet. Equipment and accumulated depreciation roll forward: beginning + purchases/depreciation − the amounts removed for the sale.`};
+}
+const STMT=[stmt,stmt,stmt,mc([
+ ["On the balance sheet, equipment rose $40,000, but the company bought $90,000 of equipment. What explains the gap?",["Equipment costing $50,000 was sold or retired","Depreciation of $50,000","A $50,000 gain","An error"],"Ending = beginning + purchases − cost of assets removed. Depreciation goes to accumulated depreciation, not equipment."],
+ ["Cash dividends paid can be found from retained earnings as…",["Beginning RE + net income − ending RE (if no other changes)","Ending RE − beginning RE","Net income − ending RE","Net income × payout ratio, always"],"Retained earnings rolls forward: beginning + NI − dividends = ending."],
+ ["Which item belongs in the supplemental noncash disclosure, not the face of the statement?",["Buying a building by issuing a mortgage note","Paying cash dividends","Selling equipment for cash","Paying interest"],"No cash moved, so it's disclosed separately."],
+])];
+
+// ================= REVENUE: FIVE STEPS =================
+const BUNDLES=[["Equipment","Installation","Two-year service plan"],["Software license","Implementation","One year of support"],["Smartphone","24-month data plan"],["Treadmill","Delivery and setup","Extended warranty"]];
+const STEPS=[["Deciding whether a signed agreement with a customer has commercial substance and collection is probable","1 Identify the contract"],["Deciding whether installation is separate from the equipment sold","2 Identify performance obligations"],["Estimating a performance bonus and applying the constraint","3 Determine the transaction price"],["Adjusting the price for a significant financing component","3 Determine the transaction price"],["Splitting a bundle discount across the items using standalone selling prices","4 Allocate the transaction price"],["Using the residual approach for an item with a highly variable price","4 Allocate the transaction price"],["Recognizing revenue as a building is constructed using cost-to-cost","5 Recognize revenue"],["Deciding whether control passes at shipment or delivery","5 Recognize revenue"]];
+const STEP_OPTS=["1 Identify the contract","2 Identify performance obligations","3 Determine the transaction price","4 Allocate the transaction price","5 Recognize revenue"];
+const REV=[
+ co=>{const items=pick(BUNDLES),ssp=items.map((_,k)=>k===0?r(2000,40000,500):r(500,10000,250)),S=ssp.reduce((a,b)=>a+b,0),T=Math.round(S*pick([.8,.85,.9])/100)*100,k=Math.floor(Math.random()*items.length),al=Math.round(T*ssp[k]/S);
+  return{kind:"num",tol:2,t:`${co} sells a bundle for ${$(T)}. Each item is a distinct performance obligation. Standalone selling prices:<ul>${items.map((x,q)=>`<li>${x}: ${$(ssp[q])}</li>`).join("")}</ul>How much of the price is allocated to the <em>${items[k].toLowerCase()}</em>?`,ans:al,
+  rows:[[`${items[k]} SSP`,ssp[k]],["Total SSPs",S],[`Allocated: $${f(T)} × ${f(ssp[k])} ÷ ${f(S)}`,al,"tot"]],w:"Allocate by relative standalone selling price. The discount is spread across every obligation unless there's evidence it relates to only some."}},
+ co=>{const T=r(20000,200000,1000),a=r(3000,Math.round(T*.4),500),b=r(2000,Math.round(T*.3),500),res=T-a-b;
+  return{kind:"num",tol:1,t:`${co} sells a package for ${$(T)}: hardware (standalone price ${$(a)}), a training course (standalone price ${$(b)}), and a software license whose price varies so widely that its standalone price can't be estimated. Using the residual approach, how much is allocated to the license?`,ans:res,
+  rows:[["Total price",T],["Less: hardware SSP",-a],["Less: training SSP",-b],["Allocated to license",res,"tot"]],w:"The residual approach is allowed only when an item's standalone price is highly variable or uncertain."}},
+ co=>{const B=r(100000,500000,10000),b1=r(10000,50000,10000),b2=b1+r(10000,50000,10000),pr=pick([[.2,.5,.3],[.3,.4,.3],[.1,.6,.3]]),ev=Math.round(B+pr[1]*b1+pr[2]*b2);
+  return{kind:"num",tol:1,t:`${co} signs a ${$(B)} contract with a bonus:<ul><li>Finish late: no bonus (${pr[0]*100}%)</li><li>On time: ${$(b1)} (${pr[1]*100}%)</li><li>Early: ${$(b2)} (${pr[2]*100}%)</li></ul>Using expected value, and assuming the constraint doesn't apply, what is the transaction price?`,ans:ev,
+  rows:[["Fixed fee",B],[`On time: ${f(b1)} × ${pr[1]*100}%`,Math.round(pr[1]*b1)],[`Early: ${f(b2)} × ${pr[2]*100}%`,Math.round(pr[2]*b2)],["Transaction price",ev,"tot"]],w:"Expected value suits many possible outcomes."}},
+ co=>{const B=r(100000,500000,10000),b=r(10000,80000,5000),p=pick([70,75,80,85]);
+  return{kind:"num",tol:1,t:`${co} signs a ${$(B)} fixed-fee contract. It earns an extra ${$(b)} if the project finishes by a deadline, and it is ${p}% likely to make it. It's an all-or-nothing bonus, and a significant reversal isn't probable. What is the transaction price using the most likely amount method?`,ans:B+b,
+  rows:[["Fixed fee",B],["Most likely bonus outcome: earned",b],["Transaction price",B+b,"tot"]],w:`With only two outcomes, the most likely amount predicts better. It's the full bonus, not ${p}% of it (that would be expected value).`}},
+ co=>{const q=r(1000,20000,100),p=r(20,80,1),d=r(2,6,1),thr=q*pick([2,3]);
+  return{kind:"num",tol:1,t:`${co} sells a part at $${p} per unit. If a customer buys more than ${f(thr)} units this year, the price drops to $${p-d} per unit retroactively for <em>all</em> units. In Q1 the customer buys ${f(q)} units, and ${co} expects it to pass the threshold. How much Q1 revenue does ${co} recognize?`,ans:q*(p-d),
+  rows:[[`${f(q)} units × $${p-d} expected price`,q*(p-d),"tot"],[`Refund liability (${f(q)} × $${d})`,q*d]],w:"A retroactive volume rebate is variable consideration. Recognize revenue at the price you expect to end up with; the rest of the cash is a refund liability."}},
+ ()=>{const s=pick(STEPS);return{kind:"mc",label:"Which step?",q:`Which ASC 606 step does this decision belong to?<ul><li>${s[0]}</li></ul>`,ans:s[1],opts:STEP_OPTS,w:"Contract → performance obligations → transaction price → allocate → recognize."}},
+ mc([
+  ["A good or service is a distinct performance obligation when…",["The customer can benefit from it on its own and it's separately identifiable in the contract","It has its own invoice line","It ships on a different day","It's over 10% of the contract"],"Both criteria: capable of being distinct, and distinct in the context of the contract."],
+  ["Revenue is recognized over time if any of these is true EXCEPT…",["The customer has paid in advance","The customer receives and uses the benefit as the company performs","The company's work creates an asset the customer controls","The asset has no alternative use and the company has a right to payment for work to date"],"Payment timing isn't one of the three over-time criteria."],
+  ["Revenue is recognized when…",["Control transfers to the customer","Cash is received","The contract is signed","The invoice is sent"],"Satisfying a performance obligation means transferring control."],
+  ["A significant financing component exists when…",["Payment timing gives either party a significant financing benefit","The contract is over $1 million","The customer uses a credit card","Payment is due within 30 days"],"Practical expedient: ignore it if the gap between payment and transfer is one year or less."],
+ ]),
+];
+
+// ================= REVENUE: SPECIAL SITUATIONS =================
+const REV2=[
+ co=>{const T=r(1200,24000,1200);return{kind:"je",t:`A customer pays ${co} ${$(T)} up front for a 12-month subscription that starts next month. Record the receipt.`,
+  l:[L("Cash",T),L("Contract Liability",0,T)],h:"Nothing has been performed yet.",w:"Cash before performance creates a contract liability (also called unearned or deferred revenue)."}},
+ co=>{const T=r(1200,24000,1200),sm=pick([4,7,10,11]),mo=["January","February","March","April","May","June","July","August","September","October","November","December"][sm-1],m=13-sm,rev=T/12*m,ask=pick(["rev","cl"]);
+  return{kind:"num",tol:1,t:`On ${mo} 1, a customer prepays ${co} ${$(T)} for a 12-month subscription starting that day. ${co}'s year ends December 31. What ${ask==="rev"?"<em>revenue</em> is recognized this year":"is the <em>contract liability</em> at December 31"}?`,ans:ask==="rev"?rev:T-rev,
+  rows:[[`Revenue: $${f(T)} × ${m}/12`,rev,ask==="rev"?"tot":""],["Contract liability (the rest)",T-rev,ask==="cl"?"tot":""]],w:"A subscription is satisfied evenly over time."}},
+ co=>{const S=r(200,5000,100),c=pick([10,15,20,25]),fee=Math.round(S*c/100),prin=Math.random()<.4;
+  return{kind:"num",tol:1,t:prin?`${co} buys inventory, sets its own prices, and is responsible if a product is defective. It sells one item online to a customer for ${$(S)}; it paid its supplier ${$(S-fee)}. How much revenue does ${co} recognize?`:`${co} runs an online marketplace. A third-party seller lists a ${$(S)} item, sets the price, and ships it directly. ${co} collects payment, keeps a ${c}% commission, and passes the rest to the seller. How much revenue does ${co} recognize?`,ans:prin?S:fee,
+  rows:prin?[["Sale price (gross)",S,"tot"],["Cost of goods sold",S-fee]]:[["Gross sale",S],[`Commission (${c}%)`,fee,"tot"]],
+  w:prin?`${co} controls the item before it goes to the customer (inventory risk, pricing, responsibility for fulfillment), so it's a principal: report $${f(S)} revenue gross, with $${f(S-fee)} cost of sales.`:`${co} never controls the item, so it's an agent and reports only its commission (net).`}},
+ co=>{const q=r(100,2000,10),p=r(20,200,5),c=Math.round(p*pick([.4,.5,.6])),k=pick([5,8,10,12]),rl=Math.round(q*p*k/100),ei=Math.round(q*c*k/100);
+  return{kind:"je",t:`${co} sells ${f(q)} units on account at $${p} each (cost $${c} each). Customers can return items within 30 days, and ${co} expects ${k}% to come back. Record the sale and the cost of sales in one entry.`,
+  l:[L("Accounts Receivable",q*p),L("Cost of Goods Sold",q*c-ei),L("Estimated Inventory Returns",ei),L("Revenue",0,q*p-rl),L("Refund Liability",0,rl),L("Inventory",0,q*c)],
+  h:"Don't recognize revenue on the items you expect back. Do the same for their cost.",
+  w:`Revenue = $${f(q*p)} × ${100-k}% = $${f(q*p-rl)}; refund liability $${f(rl)}. Cost side: COGS for expected keepers $${f(q*c-ei)}; an asset for the inventory you expect back, $${f(ei)}.`}},
+ co=>{const d=r(400,3000,50),w2=r(100,600,25),T=Math.round((d+w2)*.9/10)*10,al=Math.round(T*w2/(d+w2)),m=pick([24,36]);
+  return{kind:"num",tol:2,t:`${co} sells a laptop with a ${m/12}-year <em>extended</em> warranty for ${$(T)} total. Standalone prices: laptop ${$(d)}, extended warranty ${$(w2)}. What contract liability is recorded at the sale?`,ans:al,
+  rows:[[`Warranty: $${f(T)} × ${f(w2)} ÷ ${f(d+w2)}`,al,"tot"],["Laptop revenue now",T-al]],w:`An extended (service-type) warranty is a separate performance obligation. Its share of the price is deferred and recognized over the ${m} months. A standard assurance warranty would instead be an accrued expense.`}},
+ co=>{const CP=r(1000000,3000000,20000),ET1=Math.round(CP*.8/20000)*20000,p1=pick([.25,.3,.4]),c1=Math.round(ET1*p1),gp1=Math.round(CP*p1)-c1,ET2=CP+r(20000,200000,20000),p2=pick([.5,.6,.75]),c2_=Math.round(ET2*p2),loss=CP-ET2,y2=loss-gp1;
+  return{kind:"num",tol:2,note:"Enter a loss as a negative number.",t:`${co} has a ${$(CP)} fixed-price construction contract, recognized over time using cost-to-cost.<ul><li>Year 1: costs ${$(c1)}, estimated total costs ${$(ET1)} (gross profit recognized: ${$(gp1)})</li><li>Year 2: cumulative costs ${$(c2_)}; estimated total costs now ${$(ET2)}</li></ul>What gross profit (loss) does ${co} recognize in year 2?`,ans:y2,
+  rows:[["Contract price",CP],["Revised total costs",-ET2],["Expected total loss",loss],["Less: year-1 gross profit already recognized",-gp1],["Year-2 gross profit (loss)",y2,"tot"]],
+  w:"Once a contract is expected to lose money, the <b>entire</b> loss is recognized right away, not just a percentage of it. Year 2 also has to reverse the profit booked in year 1."}},
+ co=>{const C=r(2000,30000,500),y=pick([3,4,5]),a=Math.round(C/y);
+  return{kind:"je",t:`${co} paid a ${$(C)} sales commission to win a ${y}-year service contract and capitalized it as a contract cost asset. Record the first year's amortization.`,
+  l:[L("Commission Expense",a),L("Contract Cost Asset",0,a)],h:"Incremental costs of obtaining a contract over a year long are capitalized and amortized as the service is provided.",
+  w:`$${f(C)} ÷ ${y} = $${f(a)} a year. If the amortization period were one year or less, ${co} could expense it immediately (practical expedient).`}},
+ mc([
+  ["A company has performed, but its right to payment depends on something other than the passage of time. It records a…",["Contract asset","Contract liability","Receivable","Refund liability"],"If only time stands between the company and payment, it's a receivable."],
+  ["A license that gives access to intellectual property that the licensor keeps updating (like a brand) is recognized…",["Over time, as a right to access","At a point in time, as a right to use","When cash is received","At the end of the license"],"Functional IP like software sold as-is is a right to use: point in time."],
+  ["Goods shipped on consignment are recognized as revenue by the consignor when…",["The consignee sells them to an end customer","They are shipped to the consignee","The consignee receives them","The contract is signed"],"The consignee never controls the goods, so control hasn't transferred until the final sale."],
+  ["In a bill-and-hold arrangement, revenue can be recognized before delivery only if…",["The customer has control, there's a substantive reason, the goods are identified and ready, and can't go to others","The customer has been invoiced","The goods are in the warehouse","The customer paid a deposit"],"All four criteria are required."],
+  ["Which happens when total estimated contract costs exceed the contract price?",["The full expected loss is recognized immediately","The loss is spread over the remaining contract","No loss is recorded until completion","Only the percent-complete share of the loss is recorded"],"Loss contracts are recognized in full right away."],
+ ]),
+];
+return {cls:CLSG,ind:IND,dir:DIR,stmt:STMT,rev:REV,rev2:REV2};
+})();
+const GEN={cl:LEG.cl,bonds:[...BONDS,...LEG.bonds],leases:[...LEASES,...LEG.leases],eq:[...LEG.cap,...LEG.re],eps:LEG.eps,cf:[...CFG.cls,...CFG.ind,...CFG.dir],stmt:CFG.stmt,rev:[...REV,...CFG.rev,...CFG.rev2],tax:TAX};
 
 // ---------- State ----------
 const store={get(){try{return JSON.parse(localStorage.getItem("farDrill")||"{}")}catch(e){return{}}},set(v){try{localStorage.setItem("farDrill",JSON.stringify(v))}catch(e){}}};
@@ -475,7 +1051,7 @@ function entryTable(l){const s=[...l.filter(x=>x[1]>0),...l.filter(x=>x[2]>0)];
 const workTable=rows=>`<div class="tw"><table class="journal"><tbody>${rows.map(([lb,n,c])=>`<tr class="${c||""}"><td>${lb}</td><td class="n">${fm(n)}</td></tr>`).join("")}</tbody></table></div>`;
 function answerHTML(q){
   if(q.kind==="je")return entryTable(q.l);
-  if(q.kind==="num")return `<div><b>Answer:</b> $${fm(q.ans)}</div>${workTable(q.rows)}`;
+  if(q.kind==="num")return `<div><b>Answer:</b> ${ansTxt(q)}</div>${workTable(q.rows)}`;
   return `<div><b>Answer:</b> ${q.ans}</div>`;
 }
 function renderMissed(){
@@ -553,16 +1129,16 @@ function finishJE(ok,revealed,dT,cT,usedAlt){
 // ---------- Numeric ----------
 function renderNum(){
   card.innerHTML=`${eyebrow("Calculation")}<div class="prompt">${cur.t}</div>
-  <label class="numin" id="nwrap"><span>$</span><input id="num" inputmode="decimal" placeholder="0" aria-label="Your answer in dollars"></label>
-  <p class="note" style="margin:6px 0 0">Round to the nearest dollar.</p>
+  <label class="numin" id="nwrap"><span>${cur.unit==="sh"?"#":"$"}</span><input id="num" inputmode="decimal" placeholder="0" aria-label="Your answer in dollars"></label>
+  <p class="note" style="margin:6px 0 0">${cur.note||"Round to the nearest dollar."}</p>
   <div class="actions"><span class="spacer"></span><button class="btn" id="show" type="button">Show answer</button><button class="btn primary" id="go" type="button">Check</button></div><div id="out"></div>`;
   const fin=revealed=>{
     const v=parse(num.value);
     if(!revealed&&!isFinite(v)){out.innerHTML=`<div class="fb"><p class="note">Enter a dollar amount.</p></div>`;return}
     done=true;const ok=!revealed&&Math.abs(v-cur.ans)<=(cur.tol||.5);record(ok);num.disabled=true;
     if(!revealed)nwrap.classList.add(ok?"ok":"no");
-    const close=ok&&Math.abs(v-cur.ans)>.5?`<p class="note">Within rounding of $${fm(cur.ans)}, so it counts.</p>`:"";
-    out.innerHTML=`<div class="fb ${revealed?"":ok?"good":"bad"}"><h3>${revealed?"Here's the answer":ok?"Correct":`Not quite. The answer is $${fm(cur.ans)}`}</h3>${close}${workTable(cur.rows)}<p>${cur.w}</p></div>`;
+    const close=ok&&Math.abs(v-cur.ans)>.5?`<p class="note">Within rounding of ${ansTxt(cur)}, so it counts.</p>`:"";
+    out.innerHTML=`<div class="fb ${revealed?"":ok?"good":"bad"}"><h3>${revealed?"Here's the answer":ok?"Correct":`Not quite. The answer is ${ansTxt(cur)}`}</h3>${close}${workTable(cur.rows)}<p>${cur.w}</p></div>`;
     show.hidden=true;go.textContent="Next question →";go.focus();
   };
   num.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();done?next():fin(false)}};
