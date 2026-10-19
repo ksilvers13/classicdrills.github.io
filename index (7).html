@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Accounting Drill Pads</title>
+<meta name="description" content="Ten free, randomized accounting practice drills: journal entries, Excel, tax, and every CPA exam section.">
+<style>
+body{margin:0;background:#fff;color:#000;font:17px/1.45 "Times New Roman",Times,serif;padding:16px 16px 40px}
+.wrap{max-width:760px;margin:0 auto}
+h1{font-size:2rem;margin:.2em 0 .3em}
+h2{font-size:1.25rem;margin:1.4em 0 .4em;border-bottom:1px solid #999;padding-bottom:2px}
+p{margin:.5em 0}
+a{color:#0000cc}
+a:visited{color:#551a8b}
+ol{margin:.4em 0;padding-left:1.8em}
+li{margin:.7em 0}
+li a{font-weight:bold;font-size:1.08rem}
+.desc{display:block}
+.mine{display:block;font-size:.92rem;color:#444;font-style:italic}
+.mine[hidden]{display:none}
+hr{border:0;border-top:1px solid #999;margin:28px 0 8px}
+footer{font-size:.95rem;color:#333}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Accounting Drill Pads</h1>
+  <p>Ten practice drills, from your first journal entries to every section of the CPA exam. Every question is generated fresh and graded instantly with the work shown. Questions you miss are saved so you can redo them until you get them right.</p>
+
+  <h2>Fundamentals</h2>
+  <ol>
+    <li><a href="debit.html">Debit Drill</a>
+      <span class="desc">Journal entries and debit/credit rules for everyday transactions.</span>
+      <span class="mine" data-key="debitDrill"></span></li>
+    <li><a href="period-end.html">Period-End Drill</a>
+      <span class="desc">Adjusting entries and how the three financial statements tie together.</span>
+      <span class="mine" data-key="periodEndDrill"></span></li>
+    <li><a href="formula.html">Formula Drill</a>
+      <span class="desc">Real Excel formulas, graded by a built-in formula engine, from SUM to XLOOKUP and NPV.</span>
+      <span class="mine" data-key="formulaDrill"></span></li>
+    <li><a href="tax.html">Tax Return Basics Drill</a>
+      <span class="desc">Filing status, the standard deduction and the Form 1040 flow, with tax year 2026 figures.</span>
+      <span class="mine" data-key="taxDrill"></span></li>
+  </ol>
+
+  <h2>CPA Exam: Core Sections</h2>
+  <p>Every CPA candidate takes all three.</p>
+  <ol start="5">
+    <li><a href="aud.html">AUD Drill</a>
+      <span class="desc">Auditing and attestation: risk, evidence, internal control, sampling and audit reports.</span>
+      <span class="mine" data-key="audDrill"></span></li>
+    <li><a href="far.html">FAR Drill</a>
+      <span class="desc">Financial Accounting and Reporting: current liabilities, bonds, leases, stockholders' equity, EPS, cash flows, revenue recognition and income taxes.</span>
+      <span class="mine" data-key="farDrill"></span></li>
+    <li><a href="reg.html">REG Drill</a>
+      <span class="desc">Regulation: individual tax, property transactions, business law and tax ethics.</span>
+      <span class="mine" data-key="regDrill"></span></li>
+  </ol>
+
+  <h2>CPA Exam: Discipline Sections (pick one)</h2>
+  <p>Each candidate chooses one discipline to take alongside the core.</p>
+  <ol start="8">
+    <li><a href="bar.html">BAR Drill</a>
+      <span class="desc">Business Analysis and Reporting: managerial accounting, ratios, business combinations and government.</span>
+      <span class="mine" data-key="barDrill"></span></li>
+    <li><a href="isc.html">ISC Drill</a>
+      <span class="desc">Information Systems and Controls: IT controls, SOC reports, security and continuity.</span>
+      <span class="mine" data-key="iscDrill"></span></li>
+    <li><a href="tcp.html">TCP Drill</a>
+      <span class="desc">Tax Compliance and Planning: entities, partnerships and S corps, gifts and estates, planning.</span>
+      <span class="mine" data-key="tcpDrill"></span></li>
+  </ol>
+
+  <hr>
+  <footer>
+    Built by Keith Silverstein &middot; UConn School of Business<br>
+    <a href="https://ksilvers13.github.io/accountingdrillpads.github.io/">View the modern version</a>
+  </footer>
+</div>
+<script>
+document.querySelectorAll(".mine").forEach(el=>{
+  let s={};try{s=JSON.parse(localStorage.getItem(el.dataset.key)||"{}")}catch(e){}
+  const m=Array.isArray(s.missed)?s.missed.length:0,b=s.best||0;
+  if(b||m)el.textContent=`Your best streak: ${b} · ${m} missed question${m===1?"":"s"} to redo`;
+  else el.hidden=true;
+});
+</script>
+</body>
+</html>
